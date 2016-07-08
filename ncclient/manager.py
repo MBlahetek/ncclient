@@ -21,6 +21,7 @@ It exposes all core functionality.
 from ncclient import capabilities
 from ncclient import operations
 from ncclient import transport
+from ncclient.operations import subscribe
 import six
 import logging
 
@@ -45,6 +46,7 @@ OPERATIONS = {
     "kill_session": operations.KillSession,
     "poweroff_machine": operations.PoweroffMachine,
     "reboot_machine": operations.RebootMachine,
+    "create_subscription": subscribe.CreateSubscription
 }
 
 """

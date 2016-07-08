@@ -14,13 +14,31 @@
 
 # TODO
 
+import sys, os, warnings
+warnings.simplefilter("ignore", DeprecationWarning)
+
+from ncclient.operations.rpc import *
+
+SIMPLE_SUBSCRIPTION = """
+	<create-subscription
+        xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+    </create-subscription>
+"""
+
 class Notification(object):
     pass
 
+class CreateSubscription(RPC):
+	def request(self, filter=None, stream=None):
+		node = to_ele(SIMPLE_SUBSCRIPTION)
+		self.subscription = self._request(node)
+		self._session.add_listener(NotificationListener())
+		return self.subscription
 
-class CreateSubscription(object):
-    pass
+class NotificationListener(SessionListener):
+    def callback(self, root, raw):
+    	tag, attrs = root
+    	# print raw
 
-
-class NotificationListener(object):
-    pass
+    def errback(self, ex):
+    	pass
