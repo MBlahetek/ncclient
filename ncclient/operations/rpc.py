@@ -313,7 +313,6 @@ class RPC(object):
         """
         logger.info('Requesting %r' % self.__class__.__name__)
         req = self._wrap(op)
-        print req, len(req)
         self._session.send(req)
         if self._async:
             logger.debug('Async request, returning %r', self)
@@ -339,7 +338,6 @@ class RPC(object):
                 if self._device_handler.transform_reply():
                     return NCElement(self._reply, self._device_handler.transform_reply())
                 else:
-                    print self._reply
                     return self._reply
             else:
                 raise TimeoutExpiredError('ncclient timed out while waiting for an rpc reply.')
