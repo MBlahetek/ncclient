@@ -1,10 +1,11 @@
 from ncclient.operations.rpc import *
 from ncclient.xml_ import *
-from xml.etree.ElementTree import *
 from ncclient import manager
 from ncclient.operations.subscribe import *
 from datetime import *
 import time
+import re
+from lxml import objectify, etree
 
 # import to subscribe.py
 from dateutil import parser
@@ -40,34 +41,66 @@ DELETE = """<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
 <device xc:operation="delete"><name>ToR2</name><address>1.3.3.7</address>
 </device></devices></config>"""
 
-def callback(notification):
-	root = to_ele(notification)
-	print type(parser.parse(root[0].text)), root[0].text
-	print "notificationComplete" in root[1].tag, root[1].tag
-	print notification
+NOTIFICATION_COMPLETE = """
+<?xml version="1.0" encoding="UTF-8"?>
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+	<eventTime>2016-07-29T14:28:25.793421-07:00</eventTime>
+	<notificationComplete xmlns="urn:ietf:params:xml:ns:netmod:notification"/>
+</notification>
+"""
 
-def errback(ex):
+def callback(notification):
+	# root = to_ele(notification)
+	# print type(parser.parse(root[0].text)), root[0].text
+	# print "notificationComplete" in root[1].tag, root[1].tag
+	print notification
 	pass
 
-update_session = manager.connect(host="127.0.0.1", port=2022,
-	username="admin", password="admin",
-	hostkey_verify=False, look_for_keys=False,
-	allow_agent=False)
+def errback(ex):
+	print "error"
+	print ex
 
-subscribed_session = manager.connect(host="127.0.0.1", port=2022,
-	username="admin", password="admin",
-	hostkey_verify=False, look_for_keys=False,
-	allow_agent=False)
+NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
+root = to_ele(NOTIFICATION_COMPLETE)
+eventTime = root.find(qualify("eventTime", NETCONF_NOTIFICATION_NS))
 
-start_time = datetime.now() - timedelta(seconds=1)
-stop_time = datetime.now() + timedelta(seconds=1)
+# print type(root)
+# print root
 
-subscribed_session.create_subscription(callback, errback,
-	stream='ncs-events', start_time=start_time, stop_time=stop_time)
-# time.sleep(3)
+# update_session = manager.connect(host="127.0.0.1", port=2022,
+# 	username="admin", password="admin",
+# 	hostkey_verify=False, look_for_keys=False,
+# 	allow_agent=False)
 
-update_session.edit_config(target='running', config=CREATE)
-update_session.edit_config(target='running', config=DELETE)
+# subscribed_session = manager.connect(host="127.0.0.1", port=2022,
+# 	username="admin", password="admin",
+# 	hostkey_verify=False, look_for_keys=False,
+# 	allow_agent=False)
 
-subscribed_session.close_session()
-update_session.close_session()
+# start_time = datetime.now() - timedelta(seconds=1)
+# stop_time = datetime.now() + timedelta(seconds=1)
+
+# root_filter = etree.Element('filter')
+# devices_filter = etree.Element(qualify('devices', "http://tail-f.com/ns/ncs"))
+# device_filter = etree.Element('device')
+# root_filter.append(devices_filter)
+# devices_filter.append(device_filter)
+# device_filter.append(etree.Element('name'))
+# print subscribed_session.get_config("running", root_filter)
+# # print subscribed_session.get_config("running",
+# # 	filter=('subtree', "<devices><device><name></name></device></devices>"))
+# # print subscribed_session.get_config("running",
+# # 	filter="<filter><devices><device><name></name></device></devices></filter>")
+# # print subscribed_session.get_config("running", filter=('xpath', '/devices/device/name'))
+
+# # print subscribed_session.create_subscription(callback, errback,
+# # 	stream='ncs-events', start_time=start_time, stop_time=stop_time)
+# # time.sleep(3)
+
+# print subscribed_session.create_subscription(callback, errback)
+
+# update_session.edit_config(target='running', config=CREATE)
+# update_session.edit_config(target='running', config=DELETE)
+
+# subscribed_session.close_session()
+# update_session.close_session()
