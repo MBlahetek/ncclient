@@ -41,41 +41,45 @@ DELETE = """<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
 <device xc:operation="delete"><name>ToR2</name><address>1.3.3.7</address>
 </device></devices></config>"""
 
-NOTIFICATION_COMPLETE = """
-<?xml version="1.0" encoding="UTF-8"?>
-<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
-	<eventTime>2016-07-29T14:28:25.793421-07:00</eventTime>
-	<notificationComplete xmlns="urn:ietf:params:xml:ns:netmod:notification"/>
-</notification>
-"""
-
 def callback(notification):
 	# root = to_ele(notification)
 	# print type(parser.parse(root[0].text)), root[0].text
 	# print "notificationComplete" in root[1].tag, root[1].tag
 	print notification
-	pass
 
 def errback(ex):
-	print "error"
-	print ex
+	pass
 
-NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
-root = to_ele(NOTIFICATION_COMPLETE)
-eventTime = root.find(qualify("eventTime", NETCONF_NOTIFICATION_NS))
+update_manager = manager.connect(host="127.0.0.1", port=2022,
+	username="admin", password="admin",
+	hostkey_verify=False, look_for_keys=False,
+	allow_agent=False)
 
-# print type(root)
-# print root
+subscribed_manager = manager.connect(host="127.0.0.1", port=2022,
+	username="admin", password="admin",
+	hostkey_verify=False, look_for_keys=False,
+	allow_agent=False)
 
-# update_session = manager.connect(host="127.0.0.1", port=2022,
+try:
+	update_manager.edit_config(target='running', config=DELETE)
+except:
+	pass
+print subscribed_manager.create_subscription(callback, errback,
+	manager=subscribed_manager)
+
+update_manager.edit_config(target='running', config=CREATE)
+time.sleep(40)
+update_manager = manager.connect(host="127.0.0.1", port=2022,
+	username="admin", password="admin",
+	hostkey_verify=False, look_for_keys=False,
+	allow_agent=False)
+update_manager.edit_config(target='running', config=DELETE)
+
+# print manager.connect(host="127.0.0.1", port=2022,
 # 	username="admin", password="admin",
 # 	hostkey_verify=False, look_for_keys=False,
-# 	allow_agent=False)
-
-# subscribed_session = manager.connect(host="127.0.0.1", port=2022,
-# 	username="admin", password="admin",
-# 	hostkey_verify=False, look_for_keys=False,
-# 	allow_agent=False)
+# 	allow_agent=False).create_subscription(
+# 	callback, errback)
 
 # start_time = datetime.now() - timedelta(seconds=1)
 # stop_time = datetime.now() + timedelta(seconds=1)
@@ -86,21 +90,16 @@ eventTime = root.find(qualify("eventTime", NETCONF_NOTIFICATION_NS))
 # root_filter.append(devices_filter)
 # devices_filter.append(device_filter)
 # device_filter.append(etree.Element('name'))
-# print subscribed_session.get_config("running", root_filter)
-# # print subscribed_session.get_config("running",
-# # 	filter=('subtree', "<devices><device><name></name></device></devices>"))
-# # print subscribed_session.get_config("running",
-# # 	filter="<filter><devices><device><name></name></device></devices></filter>")
-# # print subscribed_session.get_config("running", filter=('xpath', '/devices/device/name'))
+# print subscribed_manager.get_config("running", root_filter)
+# print subscribed_manager.get_config("running",
+# 	filter=('subtree', "<devices><device><name></name></device></devices>"))
+# print subscribed_manager.get_config("running",
+# 	filter="<filter><devices><device><name></name></device></devices></filter>")
+# print subscribed_manager.get_config("running", filter=('xpath', '/devices/device/name'))
 
-# # print subscribed_session.create_subscription(callback, errback,
+# # print subscribed_manager.create_subscription(callback, errback,
 # # 	stream='ncs-events', start_time=start_time, stop_time=stop_time)
 # # time.sleep(3)
 
-# print subscribed_session.create_subscription(callback, errback)
-
-# update_session.edit_config(target='running', config=CREATE)
-# update_session.edit_config(target='running', config=DELETE)
-
-# subscribed_session.close_session()
-# update_session.close_session()
+# subscribed_manager.close_manager()
+# update_manager.close_manager()

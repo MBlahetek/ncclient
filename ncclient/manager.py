@@ -207,6 +207,8 @@ class Manager(six.with_metaclass(OpExecutor, object)):
         self._timeout = timeout
         self._raise_mode = operations.RaiseMode.ALL
         self._device_handler = device_handler
+        self._args = args
+        self._kwargs = kwargs
 
     def __enter__(self):
         return self
@@ -296,6 +298,10 @@ class Manager(six.with_metaclass(OpExecutor, object)):
     def connected(self):
         """Whether currently connected to the NETCONF server."""
         return self._session.connected
+
+    @property
+    def kwargs(self):
+        return self._kwargs
 
     async_mode = property(fget=lambda self: self._async_mode,
                           fset=__set_async_mode)

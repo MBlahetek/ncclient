@@ -16,6 +16,7 @@
 
 import sys, os, warnings
 import re
+import ncclient.manager
 
 warnings.simplefilter("ignore", DeprecationWarning)
 
@@ -26,6 +27,7 @@ from datetime import datetime
 from dateutil.parser import parse
 
 NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
+IETF_NETCONF_NOTIFICATIONS = "urn:ietf:params:xml:ns:yang:ietf-netconf-notifications"
 
 class NotificationType(object):
 	NETCONF_CONFIG_CHANGE = 1
@@ -50,19 +52,26 @@ class Notification(object):
         self._eventTime = None
         self._type = None
         self._data = None
+        self._connected = True
         self.parse()
-        # self._xpath = ""
 
     def __repr__(self):
         return self._raw
 
     def parse(self):
     	if self._parsed: return
+    	
     	root = self._root = to_ele(self._raw)
     	eventTime = root.find(qualify("eventTime", NETCONF_NOTIFICATION_NS))
+    	data = eventTime.getnext()
+    	reason = data.find(qualify("termination-reason", IETF_NETCONF_NOTIFICATIONS))
+
     	self._eventTime = parse(eventTime.text)
-    	self._data = eventTime.getnext()
-    	self._type = NotificationType.str_to_type(re.sub("{.*}", "", self._data.tag))
+    	self._type = NotificationType.str_to_type(re.sub("{.*}", "", data.tag))
+    	self._data = data
+
+    	if reason is not None:
+    		self._connected = reason.text != "dropped"
     	self._parsed = True
 
     @property
@@ -92,10 +101,22 @@ class Notification(object):
     	if not self._parsed:
     		self.parse()
     	return to_xml(self._data)
+
+    # @property
+    # def xpath(self):
+    # 	if not self._parsed:
+    # 		self.parse()
+    # 	return self._xpath
     
+    @property
+    def connected(self):
+    	if not self._parsed:
+    		self.parse()
+    	return self._connected
     
 class CreateSubscription(RPC):
-	def request(self, callback, errback, filter=None, stream=None, start_time=None, stop_time=None):
+	def request(self, callback, errback, manager=None,
+		stream=None, filter=None, start_time=None, stop_time=None):
 
 		if callback is None or errback is None:
 			raise Exception
@@ -121,25 +142,37 @@ class CreateSubscription(RPC):
 			stopTime.text = stop_time.isoformat() + "Z"
 			subscription_node.append(stopTime)
 
-		self.session.add_listener(NotificationListener(callback, errback))
+		self.session.add_listener(NotificationListener(callback, errback,
+			manager, stream, filter, start_time, stop_time))
 		return self._request(subscription_node)
 
 class NotificationListener(SessionListener):
 
-	def __init__(self, user_callback, user_errback):
+	def __init__(self, user_callback, user_errback, manager=None,
+		filter=None, stream=None, start_time=None, stop_time=None):
 		self.user_callback = user_callback
 		self.user_errback = user_errback
+		self.manager = manager
+		self.stream, self.filter, self.start_time, self.stop_time = stream, filter, start_time, stop_time
 
 	def callback(self, root, raw):
 		tag, attrs = root
 		if tag != qualify("notification", NETCONF_NOTIFICATION_NS):
 			return
-		# element = etree.fromstring(raw)
-		# event_time = element.find(qualify("eventTime", NETCONF_NOTIFICATION_NS))
-		# event = event_time.getnext()
-		# self.user_callback(event_time.text, event)
-		self.user_callback(raw)
+		notification = Notification(raw)
+		if notification.connected:
+			self.user_callback(notification)
+		else:
+			self.user_errback(notification)
 
 	def errback(self, ex):
-		pass
-		# self.user_errback(ex)
+		while self.manager is not None:
+			try:
+				session = ncclient.manager.connect(**self.manager.kwargs)
+				session.create_subscription(self.user_callback, self.user_errback, manager=self.manager,
+					stream=self.stream, filter=self.filter, start_time=self.start_time, stop_time=self.stop_time)
+				break
+			except Exception as e:
+				# print e
+				continue
+		self.user_errback(ex)

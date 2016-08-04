@@ -139,5 +139,10 @@ class TestNotification(unittest.TestCase):
 		for (actual, expected) in zip(self.notifications, data_xml):
 			self.assertEquals(normalize_xml(actual.data_xml), normalize_xml(expected))
 
+	def test_Notification_connected(self):
+		connected = [True, False, True, True]
+		for (actual, expected) in zip(self.notifications, connected):
+			self.assertEquals(actual.connected, expected)
+
 if __name__ == '__main__':
     unittest.main()
