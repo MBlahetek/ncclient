@@ -75,12 +75,12 @@ class TestCreateSubscription(unittest.TestCase):
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_callback(self, mock_subscribe):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.m.create_subscription(None, errback)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_errback(self, mock_subscribe):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.m.create_subscription(callback, None)
 
     @patch('ncclient.operations.rpc.RPC._request')
