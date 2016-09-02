@@ -6,20 +6,8 @@ from datetime import *
 import time
 import re
 from lxml import objectify, etree
-
-# import to subscribe.py
+import subprocess
 from dateutil import parser
-
-# CREATE = """<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
-# <aaa xmlns="http://tail-f.com/ns/aaa/1.1">
-# <authentication> <users> <user xc:operation="create">
-# <name>bob</name> <uid>42</uid> <gid>42</gid>
-# <password>*</password> <ssh_keydir/> <homedir/>
-# </user></users></authentication></aaa></config>"""
-# DELETE = """<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
-# <aaa xmlns="http://tail-f.com/ns/aaa/1.1">
-# <authentication> <users> <user xc:operation="delete">
-# <name>bob</name> </user></users></authentication></aaa></config>"""
 
 CREATE = """<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
 <devices xmlns="http://tail-f.com/ns/ncs">
@@ -41,14 +29,9 @@ DELETE = """<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
 <device xc:operation="delete"><name>ToR2</name><address>1.3.3.7</address>
 </device></devices></config>"""
 
-def callback(notification):
-	# root = to_ele(notification)
-	# print type(parser.parse(root[0].text)), root[0].text
-	# print "notificationComplete" in root[1].tag, root[1].tag
-	print notification
+def callback(notification): print notification
 
-def errback(ex):
-	pass
+def errback(ex): print ex
 
 update_manager = manager.connect(host="127.0.0.1", port=2022,
 	username="admin", password="admin",
@@ -60,46 +43,28 @@ subscribed_manager = manager.connect(host="127.0.0.1", port=2022,
 	hostkey_verify=False, look_for_keys=False,
 	allow_agent=False)
 
-try:
-	update_manager.edit_config(target='running', config=DELETE)
-except:
-	pass
-print subscribed_manager.create_subscription(callback, errback,
-	manager=subscribed_manager)
+# print subscribed_manager.get_config('running')
 
+try: update_manager.edit_config(target='running', config=DELETE)
+except: pass
+start_time = datetime.now() - timedelta(days=1)
+stop_time = datetime.now() + timedelta(seconds=1)
+subscribed_manager.create_subscription(callback, errback,
+	manager=subscribed_manager, filter=('xpath', '/*'))
 update_manager.edit_config(target='running', config=CREATE)
-time.sleep(40)
+
+subprocess.call(["ncs", "--stop"], cwd="/Users/alheng/ncs")
+subprocess.call(["ncs", "--start-phase0"], cwd="/Users/alheng/ncs")
+subprocess.call(["ncs", "--start-phase1"], cwd="/Users/alheng/ncs")
+subprocess.call(["ncs", "--start-phase2"], cwd="/Users/alheng/ncs")
+time.sleep(1)
+print "restarted"
+
 update_manager = manager.connect(host="127.0.0.1", port=2022,
 	username="admin", password="admin",
 	hostkey_verify=False, look_for_keys=False,
 	allow_agent=False)
 update_manager.edit_config(target='running', config=DELETE)
 
-# print manager.connect(host="127.0.0.1", port=2022,
-# 	username="admin", password="admin",
-# 	hostkey_verify=False, look_for_keys=False,
-# 	allow_agent=False).create_subscription(
-# 	callback, errback)
-
-# start_time = datetime.now() - timedelta(seconds=1)
-# stop_time = datetime.now() + timedelta(seconds=1)
-
-# root_filter = etree.Element('filter')
-# devices_filter = etree.Element(qualify('devices', "http://tail-f.com/ns/ncs"))
-# device_filter = etree.Element('device')
-# root_filter.append(devices_filter)
-# devices_filter.append(device_filter)
-# device_filter.append(etree.Element('name'))
-# print subscribed_manager.get_config("running", root_filter)
-# print subscribed_manager.get_config("running",
-# 	filter=('subtree', "<devices><device><name></name></device></devices>"))
-# print subscribed_manager.get_config("running",
-# 	filter="<filter><devices><device><name></name></device></devices></filter>")
-# print subscribed_manager.get_config("running", filter=('xpath', '/devices/device/name'))
-
-# # print subscribed_manager.create_subscription(callback, errback,
-# # 	stream='ncs-events', start_time=start_time, stop_time=stop_time)
-# # time.sleep(3)
-
-# subscribed_manager.close_manager()
-# update_manager.close_manager()
+# subscribed_manager.close_session()
+# update_manager.close_session()

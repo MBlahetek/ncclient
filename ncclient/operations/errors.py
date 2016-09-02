@@ -22,3 +22,9 @@ class TimeoutExpiredError(NCClientError):
 
 class MissingCapabilityError(NCClientError):
     pass
+
+class NotificationError(NCClientError):
+	pass
+
+class ReconnectError(NCClientError):
+	pass
