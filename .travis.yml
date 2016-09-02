@@ -4,6 +4,7 @@ python:
 - '2.7'
 - '3.4'
 install:
+- pip install python-dateutil
 - pip install .
 - pip install -r requirements.txt
 - pip install rednose coverage coveralls
