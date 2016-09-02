@@ -6,7 +6,6 @@ from dateutil.parser import parse
 from ncclient.operations.util import *
 
 NETCONF_CONFIG_CHANGE = """
-<?xml version="1.0" encoding="UTF-8"?>
 <notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
     <eventTime>2016-08-02T10:40:40.014291-07:00</eventTime>
     <netconf-config-change xmlns='urn:ietf:params:xml:ns:yang:ietf-netconf-notifications'>
@@ -25,7 +24,6 @@ NETCONF_CONFIG_CHANGE = """
 """
 
 NETCONF_CONFIG_CHANGE_DATA = """
-<?xml version="1.0" encoding="UTF-8"?>
 <netconf-config-change xmlns='urn:ietf:params:xml:ns:yang:ietf-netconf-notifications'>
     <changed-by>
         <username>admin</username>
@@ -41,7 +39,6 @@ NETCONF_CONFIG_CHANGE_DATA = """
 """
 
 NETCONF_SESSION_END = """
-<?xml version="1.0" encoding="UTF-8"?>
 <notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
     <eventTime>2016-07-29T14:26:58.519605-07:00</eventTime>
     <netconf-session-end xmlns='urn:ietf:params:xml:ns:yang:ietf-netconf-notifications'>
@@ -54,7 +51,6 @@ NETCONF_SESSION_END = """
 """
 
 NETCONF_SESSION_END_DATA = """
-<?xml version="1.0" encoding="UTF-8"?>
 <netconf-session-end xmlns='urn:ietf:params:xml:ns:yang:ietf-netconf-notifications'>
     <username>admin</username>
     <session-id>124</session-id>
@@ -64,7 +60,6 @@ NETCONF_SESSION_END_DATA = """
 """
 
 REPLAY_COMPLETE = """
-<?xml version="1.0" encoding="UTF-8"?>
 <notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
     <eventTime>2016-07-29T14:28:25.793194-07:00</eventTime>
     <replayComplete xmlns="urn:ietf:params:xml:ns:netmod:notification"/>
@@ -72,12 +67,10 @@ REPLAY_COMPLETE = """
 """
 
 REPLAY_COMPLETE_DATA = """
-<?xml version="1.0" encoding="UTF-8"?>
 <replayComplete xmlns="urn:ietf:params:xml:ns:netmod:notification"/>
 """
 
 NOTIFICATION_COMPLETE = """
-<?xml version="1.0" encoding="UTF-8"?>
 <notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
     <eventTime>2016-07-29T14:28:25.793421-07:00</eventTime>
     <notificationComplete xmlns="urn:ietf:params:xml:ns:netmod:notification"/>
@@ -85,12 +78,10 @@ NOTIFICATION_COMPLETE = """
 """
 
 NOTIFICATION_COMPLETE_DATA = """
-<?xml version="1.0" encoding="UTF-8"?>
 <notificationComplete xmlns="urn:ietf:params:xml:ns:netmod:notification"/>
 """
 
 INVALID = """
-<?xml version="1.0" encoding="UTF-8"?>
 <notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
     <replayComplete xmlns="urn:ietf:params:xml:ns:netmod:notification"/>
 </notification>
