@@ -88,7 +88,7 @@ INVALID = """
 """
 
 def normalize_xml(xml):
-    parser = etree.XMLParser(remove_blank_text=True)
+    parser = etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8', remove_blank_text=True)
     if type(xml) is not str:
         xml = etree.tostring(xml)
     return etree.tostring(etree.fromstring(xml, parser=parser))
