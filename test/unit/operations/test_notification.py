@@ -89,9 +89,9 @@ INVALID = """
 
 def normalize_xml(xml):
     parser = etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8', remove_blank_text=True)
-    element = etree.fromstring(xml, parser=parser)
     if type(xml) is not str:
         xml = etree.tostring(xml)
+    element = etree.fromstring(xml, parser=parser)
     return etree.tostring(element)
 
 class TestNotification(unittest.TestCase):
