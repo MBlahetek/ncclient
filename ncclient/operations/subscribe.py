@@ -118,7 +118,7 @@ class Notification(object):
     def data_xml(self):
         if not self._parsed:
             self.parse()
-        return etree.tostring(self._data).decode("utf-8")
+        return etree.tostring(self._data)
 
     @property
     def connected(self):
