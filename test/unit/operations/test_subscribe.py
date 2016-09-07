@@ -80,13 +80,11 @@ class TestCreateSubscription(unittest.TestCase):
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_callback(self, mock_subscribe):
-        with self.assertRaises(ValueError):
-            self.m.create_subscription(None, errback)
+        self.assertRaises(ValueError, self.m.create_subscription, None, errback)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_errback(self, mock_subscribe):
-        with self.assertRaises(ValueError):
-            self.m.create_subscription(callback, None)
+        self.assertRaises(ValueError, self.m.create_subscription, callback, None)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_default(self, mock_subscribe):
@@ -149,8 +147,7 @@ class TestCreateSubscription(unittest.TestCase):
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_invalid_start_time(self, mock_subscribe):
-        with self.assertRaises(TypeError):
-            self.m.create_subscription(callback, errback, start_time="")
+        self.assertRaises(TypeError, self.m.create_subscription, callback, errback, start_time="")
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_stop_time(self, mock_subscribe):
@@ -164,8 +161,8 @@ class TestCreateSubscription(unittest.TestCase):
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_invalid_stop_time(self, mock_subscribe):
-        with self.assertRaises(TypeError):
-            self.m.create_subscription(callback, errback, stop_time="")
+        self.assertRaises(TypeError, self.m.create_subscription,
+            callback, errback, stop_time="")
 
 if __name__ == '__main__':
     unittest.main()
