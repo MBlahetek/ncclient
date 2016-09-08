@@ -118,7 +118,7 @@ class Notification(object):
     def data_xml(self):
         if not self._parsed:
             self.parse()
-        return to_xml(self._data)
+        return etree.tostring(self._data)
 
     @property
     def connected(self):
