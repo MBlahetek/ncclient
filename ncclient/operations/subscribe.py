@@ -261,3 +261,79 @@ class NotificationListener(SessionListener):
                 retries = retries - 1
             if retries == 0:
                 self.user_errback(ReconnectError("Connection refused after %d attempts, giving up" % self.retries))
+
+class EstablishSubscription(RPC):
+
+    """The *establish-subscription* RPC.
+    According to draft-ietf-netconf-yang-push-03."""
+
+    def datetime_to_rfc(self, time_string, time):
+
+        """Validates user-inputted time and 
+        converts it to RFC 3339 time format to 
+        create a startTime or stoptime element"""
+
+        if type(time) is not datetime:
+            raise TypeError("%s is not a valid %s" % (str(time), time_string))
+        timeTag = etree.Element(stop_string)
+        timeTag.text = time.isoformat() + "Z"
+        return timeTag
+
+        def request(self, callback, errback, manager=None, retries=20, delay=1,
+            encoding=None, stream=None, filter=None, start_time=None, stop_time=None, 
+            dscp=None, priority=None, dependency=None, update_trigger=None):
+
+        """Establish a subscription to NETCONF server
+
+        *callback* user-defined callback function to be invoked when a notification arrives
+
+        *errback* user-defined function to e invoked when an error occurs
+
+        *manager* Manager object returned when user connects to NETCONF server,
+        used to store connection info so ncclient can reconnect using that information
+        (by default ncclient will not handle reconnecting the NETCONF server if user 
+        does not pass in a manager)
+
+        *retries* specifies the number of times ncclient will attempt to reconnect to
+        the NETCONF server if the connection is dropped
+
+        *delay* specifies the time ncclient will wait between consecutive attempts to
+        reconnect to the NETCONF server following a dropped connection
+
+        *encoding* Distinguish between the proper encoding that was specified
+        for the subscription (by default XML)
+
+        *stream* specifies the stram user want to receive notifications from
+        (by default NETCONF stream notifications)
+
+        *filter* specifies the notifications user wants to receive based on
+        xml subtree structure and content (by default all notifications arrive)
+
+        *start_time* specifies the time user wants to start receiving notifications
+        (by default start from present time)
+
+        *stop_time* specifies the time user wants to stop receiving notifications
+
+        *dscp* The push update’s IP packet transport priority.
+        This is made visible across network hops to receiver.
+        The transport priority is shared for all receivers of
+        a given subscription.
+
+        *priority* Relative priority for a subscription. Allows an underlying
+        transport layer perform informed load balance allocations
+        between various subscriptions.
+
+        *dependency* Provides the Subscription ID of a parent subscription
+        without which this subscription should not exist. In
+        other words, there is no reason to stream these objects
+        if another subscription is missing.
+
+        *update_trigger*
+
+        :seealso: :ref:`filter_params`"""
+
+        if callback is None:
+            raise ValueError("Missing a callback function")
+
+        if errback is None:
+            raise ValueError("Missing a errback function")

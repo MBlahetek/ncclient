@@ -8,13 +8,13 @@ snippet = """<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       </user></users></authentication></aaa></config>""" % name
 
 def callback(notification):
-	print "callback called"
-	print notification
-	print notification.data_xml
+	print("callback called")
+	print(notification)
+	print(notification.data_xml)
 
 def errback(ex):
-	print "errback called"
-	print ex
+	print("errback called")
+	print(ex)
 
 def demo(host, user, password):
 	session = manager.connect(host=host, port=830,
