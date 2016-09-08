@@ -1,13 +1,18 @@
 import unittest
-from mock import patch
+try:
+    from mock import patch
+except ImportError:
+    from unittest.mock import patch
+
 from ncclient.operations.rpc import *
 from ncclient import manager
 from ncclient.operations.subscribe import CreateSubscription, NotificationListener
+from ncclient.manager import Manager
+from ncclient.transport import Session
+
 from datetime import datetime
 from lxml import etree
 from dateutil.parser import parse
-from ncclient.manager import Manager
-from ncclient.transport import Session
 
 SUBSCRIBE_DEFAULT = """
 <ns0:create-subscription xmlns:ns0="urn:ietf:params:xml:ns:netconf:notification:1.0"/>
@@ -71,24 +76,22 @@ class TestCreateSubscription(unittest.TestCase):
     def test_CreateSubscription_add_listener(self, mock_add_listener, mock_request):
         self.m.create_subscription(callback, errback)
         mock_add_listener.assert_called()
-        self.assertEquals(type(mock_add_listener.call_args[0][0]), NotificationListener)
+        self.assertEqual(type(mock_add_listener.call_args[0][0]), NotificationListener)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_callback(self, mock_subscribe):
-        with self.assertRaises(ValueError):
-            self.m.create_subscription(None, errback)
+        self.assertRaises(ValueError, self.m.create_subscription, None, errback)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_errback(self, mock_subscribe):
-        with self.assertRaises(ValueError):
-            self.m.create_subscription(callback, None)
+        self.assertRaises(ValueError, self.m.create_subscription, callback, None)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_default(self, mock_subscribe):
         self.m.create_subscription(callback, errback)
         actual = normalize_xml(mock_subscribe.call_args[0][0])
         expected = normalize_xml(SUBSCRIBE_DEFAULT)
-        self.assertEquals(actual, expected)
+        self.assertEqual(actual, expected)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_stream(self, mock_subscribe):
@@ -96,7 +99,7 @@ class TestCreateSubscription(unittest.TestCase):
         stream='ncs-events')
         actual = normalize_xml(mock_subscribe.call_args[0][0])
         expected = normalize_xml(SUBSCRIBE_STREAM)
-        self.assertEquals(actual, expected)
+        self.assertEqual(actual, expected)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_xpath_filter(self, mock_subscribe):
@@ -104,7 +107,7 @@ class TestCreateSubscription(unittest.TestCase):
         filter=('xpath', '/devices/device/name'))
         actual = normalize_xml(mock_subscribe.call_args[0][0])
         expected = normalize_xml(SUBSCRIBE_FILTER_XPATH)
-        self.assertEquals(actual, expected)
+        self.assertEqual(actual, expected)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_subtree_filter(self, mock_subscribe):
@@ -116,7 +119,7 @@ class TestCreateSubscription(unittest.TestCase):
         filter=('subtree', devices_filter))
         actual = normalize_xml(mock_subscribe.call_args[0][0])
         expected = normalize_xml(SUBSCRIBE_FILTER_SUBTREE)
-        self.assertEquals(actual, expected)
+        self.assertEqual(actual, expected)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_string_filter(self, mock_subscribe):
@@ -131,7 +134,7 @@ class TestCreateSubscription(unittest.TestCase):
         filter=('subtree', devices_filter))
         actual = normalize_xml(mock_subscribe.call_args[0][0])
         expected = normalize_xml(SUBSCRIBE_FILTER_STRING)
-        self.assertEquals(actual, expected)
+        self.assertEqual(actual, expected)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_start_time(self, mock_subscribe):
@@ -140,12 +143,11 @@ class TestCreateSubscription(unittest.TestCase):
         start_time=start_time)
         actual = normalize_xml(mock_subscribe.call_args[0][0])
         expected = normalize_xml(SUBSCRIBE_START)
-        self.assertEquals(actual, expected)
+        self.assertEqual(actual, expected)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_invalid_start_time(self, mock_subscribe):
-        with self.assertRaises(TypeError):
-            self.m.create_subscription(callback, errback, start_time="")
+        self.assertRaises(TypeError, self.m.create_subscription, callback, errback, start_time="")
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_stop_time(self, mock_subscribe):
@@ -155,12 +157,12 @@ class TestCreateSubscription(unittest.TestCase):
         start_time=start_time, stop_time=stop_time)
         actual = normalize_xml(mock_subscribe.call_args[0][0])
         expected = normalize_xml(SUBSCRIBE_STOP)
-        self.assertEquals(actual, expected)
+        self.assertEqual(actual, expected)
 
     @patch('ncclient.operations.rpc.RPC._request')
     def test_CreateSubscription_invalid_stop_time(self, mock_subscribe):
-        with self.assertRaises(TypeError):
-            self.m.create_subscription(callback, errback, stop_time="")
+        self.assertRaises(TypeError, self.m.create_subscription,
+            callback, errback, stop_time="")
 
 if __name__ == '__main__':
     unittest.main()
