@@ -420,6 +420,7 @@ class EstablishSubscription(RPC):
         # add NotificationListener to retrieve the notifications
 
         self.session.add_listener(NotificationListener(callback, errback, 
+            manager=manager, retries=retries, delay=delay, 
             stream=stream, filter=update_filter, start_time=start_time, stop_time=stop_time))
 
         print("EstablishSubscription NotificationListener added!")
