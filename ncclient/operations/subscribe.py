@@ -268,6 +268,8 @@ class EstablishSubscription(RPC):
     """The *establish-subscription* RPC.
     According to draft-ietf-netconf-yang-push-03."""
 
+
+
     def datetime_to_rfc(self, time_string, time):
 
         """Validates user-inputted time and 
@@ -282,7 +284,7 @@ class EstablishSubscription(RPC):
 
     def request(self, callback, errback, manager=None, retries=20, delay=1,
         encoding=None, stream=None, update_filter=None, start_time=None, stop_time=None, 
-        dscp=None, priority=None, dependency=None, update_trigger=None, period, 
+        dscp=None, priority=None, dependency=None, update_trigger=None, period=None, 
         no_sync_on_start=None, excluded_change=None):
 
         """Establish a subscription to NETCONF server
@@ -348,6 +350,7 @@ class EstablishSubscription(RPC):
 
         :seealso: :ref:`filter_params`"""
 
+        print("EstablishSubscription building XML...")
 
         # catch possible errors
 
@@ -411,15 +414,17 @@ class EstablishSubscription(RPC):
 
         #if dscp excluded_change not None:
 
-
+        print("EstablishSubscription XML built!")
+        print("EstablishSubscription add NotificationListener...")
 
         # add NotificationListener to retrieve the notifications
 
         self.session.add_listener(NotificationListener(callback, errback, 
-            manager=manager, retries=retries, delay=delay, stream=stream, 
-            filter=update_filter, start_time=start_time, stop_time=stop_time))
+            stream=stream, filter=update_filter, start_time=start_time, stop_time=stop_time))
 
+        print("EstablishSubscription NotificationListener added!")
+        print("EstablishSubscription send RPC...")
+        print(subscription_node)
         # send the RPC
 
         return self._request(subscription_node)
-

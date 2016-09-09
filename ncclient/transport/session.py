@@ -188,9 +188,12 @@ class SessionListener(object):
     """
 
     def callback(self, root, raw):
-        """Called when a new XML document is received. The *root* argument allows the callback to determine whether it wants to further process the document.
+        """Called when a new XML document is received. The *root* argument allows the 
+        callback to determine whether it wants to further process the document.
 
-        Here, *root* is a tuple of *(tag, attributes)* where *tag* is the qualified name of the root element and *attributes* is a dictionary of its attributes (also qualified names).
+        Here, *root* is a tuple of *(tag, attributes)* where *tag* is the qualified 
+        name of the root element and *attributes* is a dictionary of its attributes 
+        (also qualified names).
 
         *raw* will contain the XML document as a string.
         """
