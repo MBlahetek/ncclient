@@ -46,7 +46,8 @@ OPERATIONS = {
     "kill_session": operations.KillSession,
     "poweroff_machine": operations.PoweroffMachine,
     "reboot_machine": operations.RebootMachine,
-    "create_subscription": subscribe.CreateSubscription
+    "create_subscription": subscribe.CreateSubscription,
+    "establish_subscription": subscribe.EstablishSubscription
 }
 
 """

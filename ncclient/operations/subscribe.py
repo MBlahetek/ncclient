@@ -28,6 +28,7 @@ from ncclient.operations.errors import NotificationError, ReconnectError
 
 NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
 IETF_NETCONF_NOTIFICATIONS = "urn:ietf:params:xml:ns:yang:ietf-netconf-notifications"
+YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push:1.0"
 
 class NotificationType(object):
     NETCONF_CONFIG_CHANGE = 1
@@ -279,40 +280,41 @@ class EstablishSubscription(RPC):
         timeTag.text = time.isoformat() + "Z"
         return timeTag
 
-        def request(self, callback, errback, manager=None, retries=20, delay=1,
-            encoding=None, stream=None, filter=None, start_time=None, stop_time=None, 
-            dscp=None, priority=None, dependency=None, update_trigger=None):
+    def request(self, callback, errback, manager=None, retries=20, delay=1,
+        encoding=None, stream=None, update_filter=None, start_time=None, stop_time=None, 
+        dscp=None, priority=None, dependency=None, update_trigger=None, period, 
+        no_sync_on_start=None, excluded_change=None):
 
         """Establish a subscription to NETCONF server
 
-        *callback* user-defined callback function to be invoked when a notification arrives
+        *callback* User-defined callback function to be invoked when a notification arrives
 
-        *errback* user-defined function to e invoked when an error occurs
+        *errback* User-defined function to e invoked when an error occurs
 
         *manager* Manager object returned when user connects to NETCONF server,
         used to store connection info so ncclient can reconnect using that information
         (by default ncclient will not handle reconnecting the NETCONF server if user 
         does not pass in a manager)
 
-        *retries* specifies the number of times ncclient will attempt to reconnect to
+        *retries* Specifies the number of times ncclient will attempt to reconnect to
         the NETCONF server if the connection is dropped
 
-        *delay* specifies the time ncclient will wait between consecutive attempts to
+        *delay* Specifies the time ncclient will wait between consecutive attempts to
         reconnect to the NETCONF server following a dropped connection
 
         *encoding* Distinguish between the proper encoding that was specified
         for the subscription (by default XML)
 
-        *stream* specifies the stram user want to receive notifications from
+        *stream* Specifies the stram user want to receive notifications from
         (by default NETCONF stream notifications)
 
-        *filter* specifies the notifications user wants to receive based on
+        *update_filter* Specifies the notifications user wants to receive based on
         xml subtree structure and content (by default all notifications arrive)
 
-        *start_time* specifies the time user wants to start receiving notifications
+        *start_time* Specifies the time user wants to start receiving notifications
         (by default start from present time)
 
-        *stop_time* specifies the time user wants to stop receiving notifications
+        *stop_time* Specifies the time user wants to stop receiving notifications
 
         *dscp* The push update’s IP packet transport priority.
         This is made visible across network hops to receiver.
@@ -328,12 +330,96 @@ class EstablishSubscription(RPC):
         other words, there is no reason to stream these objects
         if another subscription is missing.
 
-        *update_trigger*
+        *update_trigger* Specifies wether the user subscribes for periodic (true) or 
+        on change (false) notifications. (by default periodic)
+
+        *period* Depending on the chosen update trigger the period is either the 
+        amount of time between each periodic Notification or in case of on change 
+        Notification the dampening period. The dampening period is minimum amount 
+        of time that needs to have passed since the last time an update was
+
+        *no_sync_on_start* (on change only) Specifies wether a complete synchronisation 
+        at the beginning of a new on change subscription is wanted or not. Just on change
+        notifications will be sent if no_sync_on_start is set. (by default false)
+
+        *excluded_change* (on change only) Use to restrict which changes trigger an update.
+        For example, if modify is excluded, only creation and deletion of objects 
+        is reported.
 
         :seealso: :ref:`filter_params`"""
+
+
+        # catch possible errors
 
         if callback is None:
             raise ValueError("Missing a callback function")
 
         if errback is None:
             raise ValueError("Missing a errback function")
+
+        if period is None:
+            if update_trigger:
+                raise ValueError("Missing update period")
+            else:
+                raise ValueError("Missing dampening period")
+
+        # check if on change parameters are set for periodic subscription
+
+        if (no_sync_on_start or excluded_change is not None) and update_trigger is not false:
+            raise ValueError("Can not set on change update parameters for periodic updates")
+
+
+        # build XML tree for the RPC request
+
+        subscription_node = entree.Element(qualify("establish-subscription", YANGPUSH_NOTIFICATION_NS))
+
+        if encoding is not None:
+            encodingTag = entree.Element(qualify("encoding"))
+            encodingTag.text = encoding
+            subscription_node.append(encodingTag)
+
+        if stream is not None:
+            streamTag = entree.Element(qualify("stream"))
+            streamTag.text = stream
+            subscription_node.append(streamTag)
+
+        if update_filter is not None:
+            subscription_node.append(util.build_filter(update_filter))
+
+        if start_time is not None:
+            subscription_node.append(self.datetime_to_rfc("startTime", start_time))
+
+        if stop_time is not None:
+            subscription_node.append(self.datetime_to_rfc("stopTime", stop_time))
+
+        #if dscp is not None:
+
+        #if priority is not None:
+
+        #if dependency is not None:
+
+        #if update_trigger is not None:
+
+        if update_trigger is false:
+            eriodTag = entree.Element(qualify("dampening-period"))
+        else:        
+            periodTag = entree.Element(qualify("period"))
+        periodTag.text = period
+        subscription_node.append(periodTag)
+
+        #if no_sync_on_start is not None:
+
+        #if dscp excluded_change not None:
+
+
+
+        # add NotificationListener to retrieve the notifications
+
+        self.session.add_listener(NotificationListener(callback, errback, 
+            manager=manager, retries=retries, delay=delay, stream=stream, 
+            filter=update_filter, start_time=start_time, stop_time=stop_time))
+
+        # send the RPC
+
+        return self._request(subscription_node)
+
