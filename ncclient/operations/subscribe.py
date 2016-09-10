@@ -361,7 +361,7 @@ class EstablishSubscription(RPC):
             raise ValueError("Missing a errback function")
 
         if period is None:
-            if update_trigger:
+            if update_trigger == "on-change":
                 raise ValueError("Missing update period")
             else:
                 raise ValueError("Missing dampening period")
@@ -395,6 +395,8 @@ class EstablishSubscription(RPC):
         if stop_time is not None:
             subscription_node.append(self.datetime_to_rfc("stopTime", stop_time))
 
+        #TODO------------------------------
+
         if dscp is not None:
             dscp = None
             print ("Establishsubscription: dscp input not supported yet")
@@ -407,20 +409,32 @@ class EstablishSubscription(RPC):
             dependency = None
             print ("Establishsubscription: dependency input not supported yet")
 
-        if update_trigger is not None:
-            update_trigger = None
-            print ("Establishsubscription: update_trigger input not supported yet")
+        #TODO------------------------------    
 
-        if update_trigger is False:
-            eriodTag = etree.Element(qualify("dampening-period"))
+        if update_trigger is not None:
+            update_triggerTag = etree.Element(qualify("update-triger"))
+            update_triggerTag.text = update_trigger
+            subscription_node.append(update_triggerTag)
+
+        if update_trigger == "on-change":
+            periodTag = etree.Element(qualify("dampening-period"))
+
+            #TODO------------------------------  
+
+            if no_sync_on_start is not None:
+    
+                print ("Establishsubscription: no_sync_on_start input not supported yet")
+
+            if excluded_change is not None:
+                
+                print ("Establishsubscription: excluded_change input not supported yet")
+
+            #TODO------------------------------  
+
         else:        
             periodTag = etree.Element(qualify("period"))
         periodTag.text = period
         subscription_node.append(periodTag)
-
-        #if no_sync_on_start is not None:
-
-        #if dscp excluded_change not None:
 
         print("EstablishSubscription: XML string built!")
         print("EstablishSubscription: add NotificationListener...")
@@ -433,7 +447,8 @@ class EstablishSubscription(RPC):
 
         print("EstablishSubscription: NotificationListener added!")
         print("EstablishSubscription: send RPC...")
-        print(subscription_node)
+        xmlstr = etree.tostring(subscription_node, encoding="utf8", method="xml")
+        print(xmlstr)
         # send the RPC
 
         return self._request(subscription_node)
