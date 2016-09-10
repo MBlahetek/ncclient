@@ -1,5 +1,6 @@
 from ncclient import manager
 from ncclient.operations.subscribe import *
+import sys, os, warnings
 
 def callback(notification):
 	print("callback called")
@@ -12,15 +13,15 @@ def errback(ex):
 
 def demo(host, user, password):
 
-	session = manager.connect(host=host, port=830,
+	session = manager.connect(host=host, port=1830,
 		username=user, password=password, hostkey_verify=False,
 		look_for_keys=False, allow_agent=False)
 
-	subscribe = manager.connect(host=host, port=830,
+	subscribe = manager.connect(host=host, port=1830,
 		username=user, password=password, hostkey_verify=False,
 		look_for_keys=False, allow_agent=False)
 	
-	subscribe.establish_subscription(callback, errback, manager=session)
+	subscribe.establish_subscription(callback, errback, manager=session, period="30")
 
 if __name__ == '__main__':
-    demo(sys.argv[1], sys.argv[2], sys.argv[3])
+    demo("127.0.0.1", "admin", "admin")

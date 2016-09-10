@@ -350,7 +350,7 @@ class EstablishSubscription(RPC):
 
         :seealso: :ref:`filter_params`"""
 
-        print("EstablishSubscription building XML...")
+        print ("EstablishSubscription: building XML...")
 
         # catch possible errors
 
@@ -374,15 +374,15 @@ class EstablishSubscription(RPC):
 
         # build XML tree for the RPC request
 
-        subscription_node = entree.Element(qualify("establish-subscription", YANGPUSH_NOTIFICATION_NS))
+        subscription_node = etree.Element(qualify("establish-subscription", YANGPUSH_NOTIFICATION_NS))
 
         if encoding is not None:
-            encodingTag = entree.Element(qualify("encoding"))
+            encodingTag = etree.Element(qualify("encoding"))
             encodingTag.text = encoding
             subscription_node.append(encodingTag)
 
         if stream is not None:
-            streamTag = entree.Element(qualify("stream"))
+            streamTag = etree.Element(qualify("stream"))
             streamTag.text = stream
             subscription_node.append(streamTag)
 
@@ -395,18 +395,26 @@ class EstablishSubscription(RPC):
         if stop_time is not None:
             subscription_node.append(self.datetime_to_rfc("stopTime", stop_time))
 
-        #if dscp is not None:
+        if dscp is not None:
+            dscp = None
+            print ("Establishsubscription: dscp input not supported yet")
 
-        #if priority is not None:
+        if priority is not None:
+            priority = None
+            print ("Establishsubscription: priority input not supported yet")
 
-        #if dependency is not None:
+        if dependency is not None:
+            dependency = None
+            print ("Establishsubscription: dependency input not supported yet")
 
-        #if update_trigger is not None:
+        if update_trigger is not None:
+            update_trigger = None
+            print ("Establishsubscription: update_trigger input not supported yet")
 
-        if update_trigger is false:
-            eriodTag = entree.Element(qualify("dampening-period"))
+        if update_trigger is False:
+            eriodTag = etree.Element(qualify("dampening-period"))
         else:        
-            periodTag = entree.Element(qualify("period"))
+            periodTag = etree.Element(qualify("period"))
         periodTag.text = period
         subscription_node.append(periodTag)
 
@@ -414,8 +422,8 @@ class EstablishSubscription(RPC):
 
         #if dscp excluded_change not None:
 
-        print("EstablishSubscription XML built!")
-        print("EstablishSubscription add NotificationListener...")
+        print("EstablishSubscription: XML string built!")
+        print("EstablishSubscription: add NotificationListener...")
 
         # add NotificationListener to retrieve the notifications
 
@@ -423,8 +431,8 @@ class EstablishSubscription(RPC):
             manager=manager, retries=retries, delay=delay, 
             stream=stream, filter=update_filter, start_time=start_time, stop_time=stop_time))
 
-        print("EstablishSubscription NotificationListener added!")
-        print("EstablishSubscription send RPC...")
+        print("EstablishSubscription: NotificationListener added!")
+        print("EstablishSubscription: send RPC...")
         print(subscription_node)
         # send the RPC
 
