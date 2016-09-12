@@ -22,6 +22,7 @@ from ncclient import capabilities
 from ncclient import operations
 from ncclient import transport
 from ncclient.operations import subscribe
+from ncclient.operations import subscribe_yangpush
 import six
 import logging
 
@@ -47,7 +48,7 @@ OPERATIONS = {
     "poweroff_machine": operations.PoweroffMachine,
     "reboot_machine": operations.RebootMachine,
     "create_subscription": subscribe.CreateSubscription,
-    "establish_subscription": subscribe.EstablishSubscription
+    "establish_subscription": subscribe_yangpush.EstablishSubscription
 }
 
 """
