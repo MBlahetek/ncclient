@@ -150,7 +150,7 @@ class YangPushNotification(object):
 class EstablishSubscription(RPC):
 
     """The *establish-subscription* RPC.
-    According to draft-ietf-netconf-yang-push-03."""
+    According to draft 5277bis."""
 
 
 
@@ -252,7 +252,7 @@ class EstablishSubscription(RPC):
 
         # check if on change parameters are set for periodic subscription
 
-        if (no_sync_on_start or excluded_change is not None) and update_trigger is not false:
+        if (no_sync_on_start or excluded_change is not None) and update_trigger != "on-change":
             raise ValueError("Can not set on change update parameters for periodic updates")
 
 
@@ -279,27 +279,28 @@ class EstablishSubscription(RPC):
         if stop_time is not None:
             subscription_node.append(self.datetime_to_rfc("stopTime", stop_time))
 
-        #TODO------------------------------
+        #------------------------------TODO------------------------------
 
         if dscp is not None:
             print ("EstablishSubscription: dscp input not supported yet")
 
         if priority is not None:
-            print ("EstablishSubscription: priority input not supported yet")
+            priorityTag = etree.Element("subscription-priority")
+            priorityTag.text = priority
+            subscription_node.append(priorityTag)
 
         if dependency is not None:
-            print ("EstablishSubscription: dependency input not supported yet")
-
-        #TODO------------------------------    
+            dependencyTag = etree.Element("subscription-dependency")
+            dependencyTag.text = dependency
+            subscription_node.append(dependencyTag)    
 
         if update_trigger == "on-change":
             periodTag = etree.Element("dampening-period")
 
-            #TODO------------------------------  
 
             if no_sync_on_start is not None:
-    
                 no_sync_on_startTag = etree.Element("no-sync-on-start")
+                # a flag element, no text needed.
                 subscription_node.append(no_sync_on_startTag)
 
             if excluded_change is not None:
