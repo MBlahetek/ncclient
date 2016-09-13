@@ -35,8 +35,13 @@ class NotificationType(object):
     NETCONF_SESSION_END = 3
     REPLAY_COMPLETE = 4
     NOTIFICATION_COMPLETE = 5
-    YANG_PUSH_UPDATE = 6
-    YANG_PUSH_CHANGE_UPDATE = 7
+    SUBSCRIPTION_STARTED = 6
+    SUBSCRIPTION_MODIFIED = 7
+    SUBSCRIPTION_TERMINATED = 8
+    SUBSCRIPTION_SUSPENDED = 9
+    SUBSCRIPTION_RESUMED = 10
+    YANG_PUSH_UPDATE = 11
+    YANG_PUSH_CHANGE_UPDATE = 12
 
     @staticmethod
     def str_to_type(string):
@@ -45,6 +50,11 @@ class NotificationType(object):
         "netconf-session-end": NotificationType.NETCONF_SESSION_END,
         "replayComplete": NotificationType.REPLAY_COMPLETE,
         "notificationComplete": NotificationType.NOTIFICATION_COMPLETE,
+        "subscription-started": NotificationType.SUBSCRIPTION_STARTED,
+        "subscription-modified": NotificationType.SUBSCRIPTION_MODIFIED,
+        "subscription-terminated": NotificationType.SUBSCRIPTION_TERMINATED,
+        "subscription-suspended": NotificationType.SUBSCRIPTION_SUSPENDED,
+        "subscription-resumed" : NotificationType.SUBSCRIPTION_RESUMED,
         "push-update": NotificationType.YANG_PUSH_UPDATE,
         "push-change-update": NotificationType.YANG_PUSH_CHANGE_UPDATE}
         try: return lookup[string]
@@ -52,7 +62,7 @@ class NotificationType(object):
 
 class YangPushNotification(object):
 
-    """Represents an RFC 5277 `notification`."""
+    """Represents RFC5277 notifications """
 
     def __init__(self, raw):
         self._raw = raw
@@ -272,23 +282,15 @@ class EstablishSubscription(RPC):
         #TODO------------------------------
 
         if dscp is not None:
-            dscp = None
-            print ("Establishsubscription: dscp input not supported yet")
+            print ("EstablishSubscription: dscp input not supported yet")
 
         if priority is not None:
-            priority = None
-            print ("Establishsubscription: priority input not supported yet")
+            print ("EstablishSubscription: priority input not supported yet")
 
         if dependency is not None:
-            dependency = None
-            print ("Establishsubscription: dependency input not supported yet")
+            print ("EstablishSubscription: dependency input not supported yet")
 
         #TODO------------------------------    
-
-        if update_trigger is not None:
-            update_triggerTag = etree.Element("update-trigger")
-            update_triggerTag.text = update_trigger
-            subscription_node.append(update_triggerTag)
 
         if update_trigger == "on-change":
             periodTag = etree.Element("dampening-period")
@@ -297,11 +299,14 @@ class EstablishSubscription(RPC):
 
             if no_sync_on_start is not None:
     
-                print ("Establishsubscription: no_sync_on_start input not supported yet")
+                no_sync_on_startTag = etree.Element("no-sync-on-start")
+                subscription_node.append(no_sync_on_startTag)
 
             if excluded_change is not None:
+                excluded_changeTag = etree.Element("excluded-change")
+                excluded_changeTag.text = excluded_change
+                subscription_node.append(excluded_changeTag)
                 
-                print ("Establishsubscription: excluded_change input not supported yet")
 
             #TODO------------------------------  
 
