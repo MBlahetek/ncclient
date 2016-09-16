@@ -148,6 +148,7 @@ class Session(Thread):
 
     def send(self, message):
         """Send the supplied *message* (xml string) to NETCONF server."""
+        print('really sending')
         if not self.connected:
             raise TransportError('Not connected to NETCONF server')
         logger.debug('queueing %s' % message)

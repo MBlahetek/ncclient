@@ -167,7 +167,8 @@ class EstablishSubscription(RPC):
         return timeTag
 
     def request(self, callback, errback, manager=None, retries=20, delay=1,
-        encoding=None, stream=None, update_filter=None, start_time=None, stop_time=None, 
+        encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
+        sub_start_time=None, sub_stop_time=None, 
         dscp=None, priority=None, dependency=None, update_trigger=None, period=None, 
         no_sync_on_start=None, excluded_change=None):
 
@@ -194,13 +195,19 @@ class EstablishSubscription(RPC):
         *stream* Specifies the stram user want to receive notifications from
         (by default NETCONF stream notifications)
 
+        *start_time* Used to trigger the replay feature and indicate that the replay 
+        should start at the time specified.
+
+        *stop_time* Used with the optional replay feature to indicate the newest
+        notifications of interest.
+
         *update_filter* Specifies the notifications user wants to receive based on
         xml subtree structure and content (by default all notifications arrive)
 
-        *start_time* Specifies the time user wants to start receiving notifications
+        *sub_start_time* Specifies the time user wants to start receiving notifications
         (by default start from present time)
 
-        *stop_time* Specifies the time user wants to stop receiving notifications
+        *sub_stop_time* Specifies the time user wants to stop receiving notifications
 
         *dscp* The push update’s IP packet transport priority.
         This is made visible across network hops to receiver.
@@ -270,19 +277,25 @@ class EstablishSubscription(RPC):
             streamTag.text = stream
             subscription_node.append(streamTag)
 
-        if update_filter is not None:
-            subscription_node.append(util.build_filter(update_filter))
-
         if start_time is not None:
             subscription_node.append(self.datetime_to_rfc("startTime", start_time))
 
         if stop_time is not None:
             subscription_node.append(self.datetime_to_rfc("stopTime", stop_time))
 
-        #------------------------------TODO------------------------------
+        if update_filter is not None:
+            subscription_node.append(util.build_filter(update_filter))
+
+        if sub_start_time is not None:
+            subscription_node.append(self.datetime_to_rfc("subscription-start-time", sub_start_time))
+
+        if sub_stop_time is not None:
+            subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time))
 
         if dscp is not None:
-            print ("EstablishSubscription: dscp input not supported yet")
+            dscpTag = etree.Element("dscp")
+            dscpTag.text = priority
+            subscription_node.append(dscpTag)
 
         if priority is not None:
             priorityTag = etree.Element("subscription-priority")
@@ -296,8 +309,7 @@ class EstablishSubscription(RPC):
 
         if update_trigger == "on-change":
             periodTag = etree.Element("dampening-period")
-
-
+            
             if no_sync_on_start is not None:
                 no_sync_on_startTag = etree.Element("no-sync-on-start")
                 # a flag element, no text needed.
@@ -307,9 +319,6 @@ class EstablishSubscription(RPC):
                 excluded_changeTag = etree.Element("excluded-change")
                 excluded_changeTag.text = excluded_change
                 subscription_node.append(excluded_changeTag)
-                
-
-            #TODO------------------------------  
 
         else:        
             periodTag = etree.Element("period")

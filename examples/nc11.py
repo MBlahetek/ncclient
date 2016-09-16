@@ -2,6 +2,7 @@ from ncclient import manager
 from ncclient.operations.subscribe_yangpush import *
 import sys, os, warnings
 
+
 def callback(notification):
 	print("callback called")
 	print(notification)
@@ -21,9 +22,10 @@ def demo(host, user, password):
 		username=user, password=password, hostkey_verify=False,
 		look_for_keys=False, allow_agent=False)
 	
-	print(subscribe.establish_subscription(callback, errback, 
+	rpc_reply = subscribe.establish_subscription(callback, errback, 
 		manager=session,encoding="encode-xml", stream="push-update",
-		update_trigger="periodic", period="30"))
+		update_trigger="periodic", period="30")
+	#if rpc_reply.ok == True:
 
 if __name__ == '__main__':
     demo("127.0.0.1", "admin", "admin")
