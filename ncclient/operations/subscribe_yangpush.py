@@ -28,6 +28,8 @@ from ncclient.operations.errors import NotificationError, ReconnectError
 
 NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
 YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push:1.0"
+EVENT_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-event-notifications"
+
 
 class NotificationType(object):
     NETCONF_CONFIG_CHANGE = 1
@@ -262,7 +264,7 @@ class EstablishSubscription(RPC):
 
         # build XML tree for the RPC request
 
-        subscription_node = etree.Element(qualify("establish-subscription", YANGPUSH_NOTIFICATION_NS))
+        subscription_node = etree.Element(qualify("establish-subscription", EVENT_NOTIFICATION_NS))
 
         if encoding is not None:
             encodingTag = etree.Element("encoding")
