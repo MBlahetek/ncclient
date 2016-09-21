@@ -74,7 +74,7 @@ except AttributeError:
         ElementTree._namespace_map[uri] = prefix
 
 for (ns, pre) in six.iteritems({
-    BASE_NS_1_0: 'nc',
+    BASE_NS_1_0: 'netconf',
     NETCONF_MONITORING_NS: 'ncm',
     NXOS_1_0: 'nxos',
     NXOS_IF: 'if',
