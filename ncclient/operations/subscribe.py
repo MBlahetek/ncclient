@@ -28,7 +28,6 @@ from ncclient.operations.errors import NotificationError, ReconnectError
 
 NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
 IETF_NETCONF_NOTIFICATIONS = "urn:ietf:params:xml:ns:yang:ietf-netconf-notifications"
-YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push:1.0"
 
 class NotificationType(object):
     NETCONF_CONFIG_CHANGE = 1
