@@ -252,10 +252,7 @@ class EstablishSubscription(RPC):
             raise ValueError("Missing a errback function")
 
         if period is None:
-            if update_trigger == "on-change":
-                raise ValueError("Missing update period")
-            else:
-                raise ValueError("Missing dampening period")
+            raise ValueError("Missing period")
 
         # check if on change parameters are set for periodic subscription
 
@@ -307,8 +304,16 @@ class EstablishSubscription(RPC):
             dependencyTag.text = dependency
             subscription_node.append(dependencyTag)    
 
+        if update_trigger == "periodic":
+            periodTag = etree.Element("period")
+            periodTag.text = period
+            subscription_node.append(periodTag)
+
         if update_trigger == "on-change":
             periodTag = etree.Element("dampening-period")
+            periodTag.text = period
+            subscription_node.append(periodTag)
+
             
             if no_sync_on_start is not None:
                 no_sync_on_startTag = etree.Element("no-sync-on-start")
@@ -319,11 +324,6 @@ class EstablishSubscription(RPC):
                 excluded_changeTag = etree.Element("excluded-change")
                 excluded_changeTag.text = excluded_change
                 subscription_node.append(excluded_changeTag)
-
-        else:        
-            periodTag = etree.Element("period")
-        periodTag.text = period
-        subscription_node.append(periodTag)
 
         print("EstablishSubscription: XML string built!")
         print("EstablishSubscription: add NotificationListener...")
