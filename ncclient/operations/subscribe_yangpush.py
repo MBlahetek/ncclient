@@ -26,8 +26,8 @@ from datetime import datetime, timedelta
 from dateutil.parser import parse
 from ncclient.operations.errors import NotificationError, ReconnectError
 
-NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
-YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push:1.0"
+NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification"
+YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push"
 EVENT_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-event-notifications"
 
 
@@ -267,12 +267,12 @@ class EstablishSubscription(RPC):
         subscription_node = etree.Element(qualify("establish-subscription", EVENT_NOTIFICATION_NS))
 
         if encoding is not None:
-            encodingTag = etree.Element("encoding")
+            encodingTag = etree.Element(qualify("encoding"))
             encodingTag.text = encoding
             subscription_node.append(encodingTag)
 
         if stream is not None:
-            streamTag = etree.Element("stream")
+            streamTag = etree.Element(qualify("stream"))
             streamTag.text = stream
             subscription_node.append(streamTag)
 
@@ -292,38 +292,38 @@ class EstablishSubscription(RPC):
             subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time))
 
         if dscp is not None:
-            dscpTag = etree.Element("dscp")
+            dscpTag = etree.Element(qualify("dscp"))
             dscpTag.text = priority
             subscription_node.append(dscpTag)
 
         if priority is not None:
-            priorityTag = etree.Element("subscription-priority")
+            priorityTag = etree.Element(qualify("subscription-priority"))
             priorityTag.text = priority
             subscription_node.append(priorityTag)
 
         if dependency is not None:
-            dependencyTag = etree.Element("subscription-dependency")
+            dependencyTag = etree.Element(qualify("subscription-dependency"))
             dependencyTag.text = dependency
             subscription_node.append(dependencyTag)    
 
         if update_trigger == "periodic":
-            periodTag = etree.Element("period")
+            periodTag = etree.Element(qualify("period", YANGPUSH_NOTIFICATION_NS))
             periodTag.text = period
             subscription_node.append(periodTag)
 
         if update_trigger == "on-change":
-            periodTag = etree.Element("dampening-period")
+            periodTag = etree.Element(qualify("dampening-period"))
             periodTag.text = period
             subscription_node.append(periodTag)
 
             
             if no_sync_on_start is not None:
-                no_sync_on_startTag = etree.Element("no-sync-on-start")
+                no_sync_on_startTag = etree.Element(qualify("no-sync-on-start"))
                 # a flag element, no text needed.
                 subscription_node.append(no_sync_on_startTag)
 
             if excluded_change is not None:
-                excluded_changeTag = etree.Element("excluded-change")
+                excluded_changeTag = etree.Element(qualify("excluded-change"))
                 excluded_changeTag.text = excluded_change
                 subscription_node.append(excluded_changeTag)
 
@@ -415,3 +415,19 @@ class YangPushNotificationListener(SessionListener):
                 retries = retries - 1
             if retries == 0:
                 self.user_errback(ReconnectError("Connection refused after %d attempts, giving up" % self.retries))
+
+
+class GetSubscription(RPC):
+
+    def request(self, subscriptionID):
+
+        if subscriptionID is None:
+            raise ValueError("Missing the Subscription ID")
+
+        getSubscription_node = etree.Element(qualify("get-subscription", NETCONF_NOTIFICATION_NS))
+
+        IDTag = etree.Element("subscription-id")
+        IDTag.text = subscriptionID
+        getSubscription_node.append(IDTag)
+
+        return self._request(getSubscription_node)

@@ -29,7 +29,8 @@ class MainApplication:
 
 		self.mainframe.grid()
 
-		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.new_window).grid()
+		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.new_Subscription).grid(row=1, column=0)
+		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get Subscription", command=self.get_Subscription).grid(row=1, column=1, sticky=E)
 
 		self.buttonframe.grid()
 
@@ -51,6 +52,10 @@ class MainApplication:
 		self.subID = rpcReply
 		self.tree.insert(parent="", index="end", iid=self.subID, 
 			values=(server, self.subID, "active"))
+
+	def get_Subscription(self):
+		self.newWindow = tk.Toplevel(self.master)
+		self.app = NewSubscriptionWindow(self.newWindow, self)
 
 	def update_Subscription(self):
 		""" .set(iid, column=None, value=None)
@@ -76,7 +81,7 @@ class MainApplication:
 			self.default_style.configure("Treeview", font=("Helvetica", 11))
 			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11))
 
-	def new_window(self):
+	def new_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
 		self.app = NewSubscriptionWindow(self.newWindow, self)
 
@@ -202,12 +207,10 @@ class NewSubscriptionWindow:
 		else:
 			self.stopTime = None
 
-		self.filterTuple = ()
-
 		self.updateFilter = self.SB_UpdateFilter.get()
 
 		if self.updateFilter == "subtree":
-			self.filterTuple = self.SB_UpdateFilter.get()
+			self.filterTuple = (self.updateFilter, ())
 		else:
 			self.filterTuple = (self.SB_UpdateFilter.get(), self.E_XPath.get())
 
@@ -258,7 +261,7 @@ class NewSubscriptionWindow:
 			if self.CB_ExcludedChangeDel.get():
 				self.exclude.append("deletion")
 
-		self.session = manager.connect(host=self.host, port=1830, username=self.user, 
+		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
 			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
 
 		#----------------------------------------------
