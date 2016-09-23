@@ -55,7 +55,7 @@ class MainApplication:
 
 	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
-		self.app = NewSubscriptionWindow(self.newWindow, self)
+		self.app = GetSubscriptionWindow(self.newWindow, self)
 
 	def update_Subscription(self):
 		""" .set(iid, column=None, value=None)
@@ -94,22 +94,27 @@ class NewSubscriptionWindow:
 
 		self.L_ServerIP = Label(self.topframe, text="Server IP: ").grid(row=0, column=0, sticky=W)
 		self.E_ServerIP = Entry(self.topframe)
+		self.E_ServerIP.insert(END, "127.0.0.1")
 		self.E_ServerIP.grid(row=0, column=1, sticky=E)
 
 		self.L_UserName = Label(self.topframe, text="User Name: ").grid(row=1, column=0, sticky=W)
 		self.E_UserName = Entry(self.topframe)
+		self.E_UserName.insert(END, "admin")
 		self.E_UserName.grid(row=1, column=1, sticky=E)
 
 		self.L_Password = Label(self.topframe, text="Password: ").grid(row=2, column=0, sticky=W)
 		self.E_Password = Entry(self.topframe, show="*")
+		self.E_Password.insert(END, "admin")
 		self.E_Password.grid(row=2, column=1, sticky=E)
 
 		self.L_Encoding = Label(self.topframe, text="encoding: ").grid(row=3, sticky=W)
 		self.E_Encoding = Entry(self.topframe)
+		self.E_Encoding.insert(END, "encode-xml")
 		self.E_Encoding.grid(row=3, column=1, sticky=E)
 
 		self.L_Stream = Label(self.topframe, text="stream: ").grid(row=4, sticky=W)
 		self.E_Stream = Entry(self.topframe)
+		self.E_Stream.insert(END, "NETCONF")
 		self.E_Stream.grid(row=4, column=1, sticky=E)
 
 		self.L_StartTime = Label(self.topframe, text="startTime: ").grid(row=5, sticky=W)
@@ -121,12 +126,12 @@ class NewSubscriptionWindow:
 		self.E_StopTime.grid(row=6, column=1, sticky=E)
 
 		self.L_UpdateFilter = Label(self.topframe, text="update-filter: ").grid(row=7, sticky=W)
-		self.updateFilters = ("subtree", "xpath")
+		self.updateFilters = ("None", "subtree", "xpath")
 		self.SB_UpdateFilter = Spinbox(self.topframe, values=self.updateFilters, wrap=True, state='readonly')
 		self.SB_UpdateFilter.grid(row=7, column=1, sticky=E)
-		self.L_XPath = Label(self.topframe, text="    xpath: ").grid(row=8, sticky=W)
-		self.E_XPath = Entry(self.topframe)
-		self.E_XPath.grid(row=8, column=1, sticky=E)
+		self.L_Criteria = Label(self.topframe, text="    criteria: ").grid(row=8, sticky=W)
+		self.E_Criteria = Entry(self.topframe)
+		self.E_Criteria.grid(row=8, column=1, sticky=E)
 
 		self.L_SubStartTime = Label(self.topframe, text="subscription-start-time: ").grid(row=9, sticky=W)
 		self.E_SubStartTime = Entry(self.topframe)
@@ -155,6 +160,7 @@ class NewSubscriptionWindow:
 		
 		self.L_Period = Label(self.topframe, text="    period: ").grid(row=15, sticky=W)
 		self.E_Period = Entry(self.topframe)
+		self.E_Period.insert(END, "10")
 		self.E_Period.grid(row=15, column=1, sticky=E)
 
 		self.L_NoSyncOnStart = Label(self.topframe, text="    no-synch-on-start: ").grid(row=16, sticky=W)
@@ -176,7 +182,7 @@ class NewSubscriptionWindow:
 
 		self.sendButton = tk.Button(self.bottomframe, text = 'Send', width = 10, command = self.send_request)
 		self.sendButton.grid(row=0,column=0)
-		self.quitButton = tk.Button(self.bottomframe, text = 'Cancel', width = 10, command = self.close_windows)
+		self.quitButton = tk.Button(self.bottomframe, text = 'Cancel', width = 10, command = self.close_window)
 		self.quitButton.grid(row=0,column=1)
 		
 		self.topframe.grid(row=0)
@@ -208,11 +214,27 @@ class NewSubscriptionWindow:
 			self.stopTime = None
 
 		self.updateFilter = self.SB_UpdateFilter.get()
+		self.updateCriteria = self.E_Criteria.get()
 
-		if self.updateFilter == "subtree":
-			self.filterTuple = (self.updateFilter, ())
+		if self.updateFilter != "None" and self.updateCriteria == "":
+			print("Criteria not in a proper format!")
+			return
+
+		if 	self.updateFilter != "None":
+			if self.updateFilter == "subtree":
+				if self.updateCriteria[0] == "<":
+					self.filterTuple = (self.updateFilter, self.updateCriteria)
+				else:
+					print("Criteria not in a proper format!")
+					return
+			else:
+				if self.updateCriteria[0] != "<":
+					self.filterTuple = (self.updateFilter, self.updateCriteria)
+				else:
+					print("Criteria not in a proper format!")
+					return
 		else:
-			self.filterTuple = (self.SB_UpdateFilter.get(), self.E_XPath.get())
+			self.filterTuple = None
 
 		if self.E_SubStartTime.get() != "":
 			self.subStartTime = self.E_SubStartTime.get()
@@ -264,10 +286,6 @@ class NewSubscriptionWindow:
 		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
 			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
 
-		#----------------------------------------------
-		self.controller.add_Subscription("101", self.host)
-		#----------------------------------------------
-
 		self.rpc_reply = self.session.establish_subscription(callback=self.controller.callback, 
 			errback=self.controller.errback, manager=self.session, encoding=self.encoding, 
 			stream=self.stream, start_time=self.startTime, stop_time=self.stopTime, 
@@ -278,14 +296,75 @@ class NewSubscriptionWindow:
 
 		print(self.rpc_reply)
 
+		close_window()
+
 		#if self.rpc_reply == "ok":
 		#	self.controller.add_Subscription(self.rpc_reply, self.host)
 		#	self.master.destroy()
 		#else:
 		#	print("Failed to subscribe!")
 
-	def close_windows(self):
+	def close_window(self):
 		self.master.destroy()
+
+class GetSubscriptionWindow:
+	def __init__(self, master, controller):
+		self.master = master
+		self.topframe = tk.Frame(self.master)
+		self.bottomframe = tk.Frame(self.master)
+		self.controller = controller
+
+		self.L_ServerIP = Label(self.topframe, text="Server IP: ").grid(row=0, column=0, sticky=W)
+		self.E_ServerIP = Entry(self.topframe)
+		self.E_ServerIP.insert(END, "127.0.0.1")
+		self.E_ServerIP.grid(row=0, column=1, sticky=E)
+
+		self.L_UserName = Label(self.topframe, text="User Name: ").grid(row=1, column=0, sticky=W)
+		self.E_UserName = Entry(self.topframe)
+		self.E_UserName.insert(END, "admin")
+		self.E_UserName.grid(row=1, column=1, sticky=E)
+
+		self.L_Password = Label(self.topframe, text="Password: ").grid(row=2, column=0, sticky=W)
+		self.E_Password = Entry(self.topframe, show="*")
+		self.E_Password.insert(END, "admin")
+		self.E_Password.grid(row=2, column=1, sticky=E)
+
+		self.L_SubID = Label(self.topframe, text="Subscription ID: ").grid(row=3, column=0, sticky=W)
+		self.E_SubID = Entry(self.topframe)
+		self.E_SubID.grid(row=3, column=1, sticky=E)
+
+
+		self.sendButton = tk.Button(self.bottomframe, text = 'Send', width = 10, command = self.send_request)
+		self.sendButton.grid(row=0,column=0)
+		self.quitButton = tk.Button(self.bottomframe, text = 'Cancel', width = 10, command = self.close_window)
+		self.quitButton.grid(row=0,column=1)
+		
+		self.topframe.grid(row=0)
+		self.bottomframe.grid(row=1)
+
+
+	def send_request(self):
+		self.host = self.E_ServerIP.get()
+		self.user = self.E_UserName.get()
+		self.password = self.E_Password.get()
+		self.subID = self.E_SubID.get()
+
+		if self.subID == "":
+			print("Subscription ID is missing!")
+			return
+
+		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
+			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
+
+		self.rpc_reply = self.session.get_subscription(subscriptionID=self.subID)
+
+		print(self.rpc_reply)
+
+		close_window()
+
+	def close_window(self):
+		self.master.destroy()
+				
 
 def main(): 
 	root = tk.Tk()

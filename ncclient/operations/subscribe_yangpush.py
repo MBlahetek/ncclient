@@ -164,7 +164,7 @@ class EstablishSubscription(RPC):
 
         if type(time) is not datetime:
             raise TypeError("%s is not a valid %s" % (str(time), time_string))
-        timeTag = etree.Element(stop_string)
+        timeTag = etree.Element(time_string)
         timeTag.text = time.isoformat() + "Z"
         return timeTag
 
@@ -292,17 +292,17 @@ class EstablishSubscription(RPC):
             subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time))
 
         if dscp is not None:
-            dscpTag = etree.Element(qualify("dscp"))
+            dscpTag = etree.Element(qualify("dscp", YANGPUSH_NOTIFICATION_NS))
             dscpTag.text = priority
             subscription_node.append(dscpTag)
 
         if priority is not None:
-            priorityTag = etree.Element(qualify("subscription-priority"))
+            priorityTag = etree.Element(qualify("subscription-priority", YANGPUSH_NOTIFICATION_NS))
             priorityTag.text = priority
             subscription_node.append(priorityTag)
 
         if dependency is not None:
-            dependencyTag = etree.Element(qualify("subscription-dependency"))
+            dependencyTag = etree.Element(qualify("subscription-dependency", YANGPUSH_NOTIFICATION_NS))
             dependencyTag.text = dependency
             subscription_node.append(dependencyTag)    
 
@@ -312,18 +312,18 @@ class EstablishSubscription(RPC):
             subscription_node.append(periodTag)
 
         if update_trigger == "on-change":
-            periodTag = etree.Element(qualify("dampening-period"))
+            periodTag = etree.Element(qualify("dampening-period", YANGPUSH_NOTIFICATION_NS))
             periodTag.text = period
             subscription_node.append(periodTag)
 
             
             if no_sync_on_start is not None:
-                no_sync_on_startTag = etree.Element(qualify("no-sync-on-start"))
+                no_sync_on_startTag = etree.Element(qualify("no-sync-on-start", YANGPUSH_NOTIFICATION_NS))
                 # a flag element, no text needed.
                 subscription_node.append(no_sync_on_startTag)
 
             if excluded_change is not None:
-                excluded_changeTag = etree.Element(qualify("excluded-change"))
+                excluded_changeTag = etree.Element(qualify("excluded-change", YANGPUSH_NOTIFICATION_NS))
                 excluded_changeTag.text = excluded_change
                 subscription_node.append(excluded_changeTag)
 
