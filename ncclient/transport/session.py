@@ -244,6 +244,7 @@ class HelloHandler(SessionListener):
             map(fun, capabilities)
         else:
             list(map(fun, capabilities))
+        print(to_xml(hello))
         return to_xml(hello)
 
     @staticmethod

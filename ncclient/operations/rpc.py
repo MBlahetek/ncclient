@@ -138,6 +138,7 @@ class RPCReply(object):
 
     def parse(self):
         "Parses the *rpc-reply*."
+        print("parsing rpc-reply")
         if self._parsed: return
         root = self._root = to_ele(self._raw) # The <rpc-reply> element
         # Per RFC 4741 an <ok/> tag is sent when there are no errors or warnings
@@ -197,6 +198,7 @@ class RPCReplyListener(SessionListener): # internal use
                 instance._device_handler = device_handler
                 #instance._pipelined = session.can_pipeline
                 session.add_listener(instance)
+                print("RPCReplyListner added!")
             return instance
 
     def register(self, id, rpc):

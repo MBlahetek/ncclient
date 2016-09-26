@@ -343,7 +343,22 @@ class EstablishSubscription(RPC):
         print("EstablishSubscription: send RPC...")
 
         # send the RPC
-
+        """
+        test_node = etree.Element(qualify("establish-subscription", EVENT_NOTIFICATION_NS))
+        
+        encodingTag = etree.Element("encoding")
+        encodingTag.text = "encode-xml"
+        test_node.append(encodingTag)
+        
+        streamTag = etree.Element("stream")
+        streamTag.text = "push-update"
+        test_node.append(streamTag)
+        
+        periodTag = etree.Element(qualify("period",YANGPUSH_NOTIFICATION_NS))
+        periodTag.text = "30"
+        test_node.append(periodTag)
+        
+        return self._request(test_node)"""
         return self._request(subscription_node)
 
 
@@ -415,19 +430,3 @@ class YangPushNotificationListener(SessionListener):
                 retries = retries - 1
             if retries == 0:
                 self.user_errback(ReconnectError("Connection refused after %d attempts, giving up" % self.retries))
-
-
-class GetSubscription(RPC):
-
-    def request(self, subscriptionID):
-
-        if subscriptionID is None:
-            raise ValueError("Missing the Subscription ID")
-
-        getSubscription_node = etree.Element(qualify("get-subscription", NETCONF_NOTIFICATION_NS))
-
-        IDTag = etree.Element("subscription-id")
-        IDTag.text = subscriptionID
-        getSubscription_node.append(IDTag)
-
-        return self._request(getSubscription_node)

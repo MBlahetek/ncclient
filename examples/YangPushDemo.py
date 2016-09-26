@@ -17,13 +17,45 @@ class MainApplication:
 		self.tree = ttk.Treeview(self.mainframe)
 		self.tree['show'] = 'headings'
 
-		self.tree["columns"]=("Server","Subscription ID", "Status")
-		self.tree.column("Server", width=300 )
-		self.tree.column("Subscription ID", width=300)
-		self.tree.column("Status", width=300)
+		self.tree["columns"]=("Server","Subscription ID", "Configured Subscription", 
+			"Status", "Stream", "Filter", "Replay start time", "Replay stop time",
+			"Encoding", "Start time", "Stop time", "Update-trigger", "DSCP", "Priority",
+			"Dependency", "Receivers", "Push source")
+		self.tree.column("Server", width=150 )
+		self.tree.column("Subscription ID", width=150)
+		self.tree.column("Configured Subscription", width=150)
+		self.tree.column("Status", width=150 )
+		self.tree.column("Stream", width=150)
+		self.tree.column("Filter", width=150)
+		self.tree.column("Replay start time", width=150 )
+		self.tree.column("Replay stop time", width=150)
+		self.tree.column("Encoding", width=150)
+		self.tree.column("Start time", width=150 )
+		self.tree.column("Stop time", width=150)
+		self.tree.column("Update-trigger", width=150)
+		self.tree.column("DSCP", width=150 )
+		self.tree.column("Priority", width=150)
+		self.tree.column("Dependency", width=150)
+		self.tree.column("Receivers", width=150 )
+		self.tree.column("Push source", width=150)
+
 		self.tree.heading("Server", text="Server")
 		self.tree.heading("Subscription ID", text="Subscription ID")
+		self.tree.heading("Configured Subscription", text="Configured Subscription")
 		self.tree.heading("Status", text="Status")
+		self.tree.heading("Stream", text="Stream")
+		self.tree.heading("Filter", text="Filter")
+		self.tree.heading("Replay start time", text="Replay start time")
+		self.tree.heading("Replay stop time", text="Replay stop time")
+		self.tree.heading("Encoding", text="Encoding")
+		self.tree.heading("Start time", text="Start time")
+		self.tree.heading("Stop time", text="Stop time")
+		self.tree.heading("Update-trigger", text="Update-trigger")
+		self.tree.heading("DSCP", text="DSCP")
+		self.tree.heading("Priority", text="Priority")
+		self.tree.heading("Dependency", text="Dependency")
+		self.tree.heading("Receivers", text="Receivers")
+		self.tree.heading("Push source", text="Push source")
 
 		self.tree.grid()
 
@@ -328,11 +360,6 @@ class GetSubscriptionWindow:
 		self.E_Password = Entry(self.topframe, show="*")
 		self.E_Password.insert(END, "admin")
 		self.E_Password.grid(row=2, column=1, sticky=E)
-
-		self.L_SubID = Label(self.topframe, text="Subscription ID: ").grid(row=3, column=0, sticky=W)
-		self.E_SubID = Entry(self.topframe)
-		self.E_SubID.grid(row=3, column=1, sticky=E)
-
 
 		self.sendButton = tk.Button(self.bottomframe, text = 'Send', width = 10, command = self.send_request)
 		self.sendButton.grid(row=0,column=0)
