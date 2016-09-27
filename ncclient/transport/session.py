@@ -148,7 +148,7 @@ class Session(Thread):
 
     def send(self, message):
         """Send the supplied *message* (xml string) to NETCONF server."""
-        print('really sending')
+        print('RPC sent')
         if not self.connected:
             raise TransportError('Not connected to NETCONF server')
         logger.debug('queueing %s' % message)
@@ -244,8 +244,9 @@ class HelloHandler(SessionListener):
             map(fun, capabilities)
         else:
             list(map(fun, capabilities))
-        print(to_xml(hello))
-        return to_xml(hello)
+        hellostring = to_xml(hello)
+        print(hellostring)
+        return hellostring
 
     @staticmethod
     def parse(raw):

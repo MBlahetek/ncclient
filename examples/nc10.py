@@ -19,7 +19,7 @@ def demo(host, user, password):
 		look_for_keys=False, allow_agent=False)
 	
 	rpc_reply = session.establish_subscription(callback, errback, 
-		manager=session, encoding="encode-xml", stream="push-update", 
+		manager=session, encoding="encode-xml", stream="push-update", update_trigger="periodic",
 		period="30")
 
 if __name__ == '__main__':
