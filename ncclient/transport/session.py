@@ -244,7 +244,7 @@ class HelloHandler(SessionListener):
             map(fun, capabilities)
         else:
             list(map(fun, capabilities))
-        hellostring = to_xml(hello)
+        hellostring = to_xml(hello) + "]]>]]>"
         print(hellostring)
         return hellostring
 

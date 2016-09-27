@@ -93,12 +93,12 @@ qualify = lambda tag, ns=BASE_NS_1_0: tag if ns is None else "{%s}%s" % (ns, tag
 def to_xml(ele, encoding="UTF-8", pretty_print=False):
     "Convert and return the XML for an *ele* (:class:`~xml.etree.ElementTree.Element`) with specified *encoding*."
     xml = etree.tostring(ele, encoding=encoding, pretty_print=pretty_print)
-    #if sys.version < '3':
-    #    return xml if xml.startswith('<?xml') else '<?xml version="1.0" encoding="%s"?>%s' % (encoding, xml)
-    #else:
-    #    return xml.decode('UTF-8') if xml.startswith(b'<?xml') \
-    #        else '<?xml version="1.0" encoding="%s"?>%s' % (encoding, xml.decode('UTF-8'))
-    return xml
+    if sys.version < '3':
+        return xml if xml.startswith('<?xml') else '<?xml version="1.0" encoding="%s"?>%s' % (encoding, xml)
+    else:
+        return xml.decode('UTF-8') if xml.startswith(b'<?xml') \
+            else '<?xml version="1.0" encoding="%s"?>%s' % (encoding, xml.decode('UTF-8'))
+
 
 def to_ele(x):
     "Convert and return the :class:`~xml.etree.ElementTree.Element` for the XML document *x*. If *x* is already an :class:`~xml.etree.ElementTree.Element` simply returns that."
