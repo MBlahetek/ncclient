@@ -85,9 +85,7 @@ class MainApplication:
 		self.tree.insert(parent="", index="end", iid=self.subID, 
 			values=(server, self.subID, "active"))
 
-	def get_Subscription(self):
-		self.newWindow = tk.Toplevel(self.master)
-		self.app = GetSubscriptionWindow(self.newWindow, self)
+
 
 	def update_Subscription(self):
 		""" .set(iid, column=None, value=None)
@@ -112,7 +110,11 @@ class MainApplication:
 			self.default_style.configure(".", font=("Helvetica",11))
 			self.default_style.configure("Treeview", font=("Helvetica", 11))
 			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11))
-
+			
+	def get_Subscription(self):
+		self.newWindow = tk.Toplevel(self.master)
+		self.app = GetSubscriptionWindow(self.newWindow, self)
+		
 	def new_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
 		self.app = NewSubscriptionWindow(self.newWindow, self)
@@ -360,6 +362,10 @@ class GetSubscriptionWindow:
 		self.E_Password = Entry(self.topframe, show="*")
 		self.E_Password.insert(END, "admin")
 		self.E_Password.grid(row=2, column=1, sticky=E)
+		
+		self.L_SubID = Label(self.topframe, text="Subscription ID: ").grid(row=3, column=0, sticky=W)
+		self.E_SubID = Entry(self.topframe)
+		self.E_SubID.grid(row=3, column=1, sticky=E)
 
 		self.sendButton = tk.Button(self.bottomframe, text = 'Send', width = 10, command = self.send_request)
 		self.sendButton.grid(row=0,column=0)
@@ -369,23 +375,23 @@ class GetSubscriptionWindow:
 		self.topframe.grid(row=0)
 		self.bottomframe.grid(row=1)
 
-
 	def send_request(self):
 		self.host = self.E_ServerIP.get()
 		self.user = self.E_UserName.get()
 		self.password = self.E_Password.get()
 		self.subID = self.E_SubID.get()
 
-		if self.subID == "":
-			print("Subscription ID is missing!")
-			return
-
 		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
 			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
+		
+		if self.subID == "":
+			self.rpc_reply = self.session.get(filter=("xpath", "/subscriptions"))
+		else:
+			self.rpc_reply = self.session.get(filter=("xpath", "/subscriptions/subscription/subscription-id/%s" % self.subID))
+		
+		self.controller.add_Subscription(self.rpc_reply)
 
-		self.rpc_reply = self.session.get_subscription(subscriptionID=self.subID)
-
-		print(self.rpc_reply)
+		print(self.rpc_reply)	
 
 		close_window()
 
