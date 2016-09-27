@@ -15,9 +15,6 @@ class MainApplication:
 		self.mainframe = tk.Frame(self.master)
 		self.buttonframe = tk.Frame(self.master)
 		self.tree = ttk.Treeview(self.mainframe, height=20)
-		#self.ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
-		#self.xsb = ttk.Scrollbar(self, orient='horizontal', command=self.tree.xview)
-		#self.tree.configure(yscroll=self.ysb.set, xscroll=self.xsb.set)
 		self.tree['show'] = 'headings'
 
 		self.tree["columns"]=("Server","Subscription ID", "Configured Subscription", 
@@ -192,8 +189,10 @@ class NewSubscriptionWindow:
 
 		self.L_UpdateTrigger = Label(self.topframe, text="update-trigger: ").grid(row=14, sticky=W)
 		self.updateTriggers = ("periodic", "on-change")
-		self.SB_UpdateTrigger = Spinbox(self.topframe, values=self.updateTriggers, wrap=True, state='readonly')
+		self.updateVar = StringVar()
+		self.SB_UpdateTrigger = Spinbox(self.topframe, values=self.updateTriggers, wrap=True, state='readonly', textvariable=self.updateVar)
 		self.SB_UpdateTrigger.grid(row=14, column=1, sticky=E)
+		self.updateVar.trace("w", self.updateTriggerChange)
 		
 		self.L_Period = Label(self.topframe, text="    period: ").grid(row=15, sticky=W)
 		self.E_Period = Entry(self.topframe)
@@ -206,7 +205,7 @@ class NewSubscriptionWindow:
 		self.CB_NoSyncOnStart.grid(row=16, column=1)
 
 		self.L_DampeningPeriod = Label(self.topframe, text="    dampening-period: ").grid(row=17, sticky=W)
-		self.E_DampeningPeriod = Entry(self.topframe)
+		self.E_DampeningPeriod = Entry(self.topframe, state='disabled')
 		self.E_DampeningPeriod.grid(row=17, column=1, sticky=E)
 
 		self.L_ExcludedChange = Label(self.topframe, text="    excluded-change: ").grid(row=18, sticky=W)
@@ -350,6 +349,19 @@ class NewSubscriptionWindow:
 		#	self.master.destroy()
 		#else:
 		#	print("Failed to subscribe!")
+	def updateTriggerChange(self, a, b, c):
+		if self.SB_UpdateTrigger.get() == "periodic":
+			intvar = self.E_DampeningPeriod.get()
+			self.E_DampeningPeriod.delete(0,END)
+			self.E_DampeningPeriod.configure(state='disabled')
+			self.E_Period.configure(state='normal')
+			self.E_Period.insert(0, intvar)
+		else:
+			intvar = self.E_Period.get()
+			self.E_Period.delete(0,END)
+			self.E_Period.configure(state='disabled')
+			self.E_DampeningPeriod.configure(state='normal')
+			self.E_DampeningPeriod.insert(0, intvar)
 
 	def close_window(self):
 		self.master.destroy()
