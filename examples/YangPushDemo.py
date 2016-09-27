@@ -14,30 +14,33 @@ class MainApplication:
 
 		self.mainframe = tk.Frame(self.master)
 		self.buttonframe = tk.Frame(self.master)
-		self.tree = ttk.Treeview(self.mainframe)
+		self.tree = ttk.Treeview(self.mainframe, height=20)
+		#self.ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
+		#self.xsb = ttk.Scrollbar(self, orient='horizontal', command=self.tree.xview)
+		#self.tree.configure(yscroll=self.ysb.set, xscroll=self.xsb.set)
 		self.tree['show'] = 'headings'
 
 		self.tree["columns"]=("Server","Subscription ID", "Configured Subscription", 
 			"Status", "Stream", "Filter", "Replay start time", "Replay stop time",
 			"Encoding", "Start time", "Stop time", "Update-trigger", "DSCP", "Priority",
 			"Dependency", "Receivers", "Push source")
-		self.tree.column("Server", width=150 )
-		self.tree.column("Subscription ID", width=150)
-		self.tree.column("Configured Subscription", width=150)
-		self.tree.column("Status", width=150 )
-		self.tree.column("Stream", width=150)
-		self.tree.column("Filter", width=150)
-		self.tree.column("Replay start time", width=150 )
-		self.tree.column("Replay stop time", width=150)
-		self.tree.column("Encoding", width=150)
-		self.tree.column("Start time", width=150 )
-		self.tree.column("Stop time", width=150)
-		self.tree.column("Update-trigger", width=150)
-		self.tree.column("DSCP", width=150 )
-		self.tree.column("Priority", width=150)
-		self.tree.column("Dependency", width=150)
-		self.tree.column("Receivers", width=150 )
-		self.tree.column("Push source", width=150)
+		self.tree.column("Server", width=150, minwidth=150)
+		self.tree.column("Subscription ID", width=160, minwidth=150)
+		self.tree.column("Configured Subscription", width=170, minwidth=150)
+		self.tree.column("Status", width=140, minwidth=140)
+		self.tree.column("Stream", width=140, minwidth=140)
+		self.tree.column("Filter", width=140, minwidth=130)
+		self.tree.column("Replay start time", width=170, minwidth=130)
+		self.tree.column("Replay stop time", width=170, minwidth=130)
+		self.tree.column("Encoding", width=140, minwidth=130)
+		self.tree.column("Start time", width=140, minwidth=130)
+		self.tree.column("Stop time", width=140, minwidth=130)
+		self.tree.column("Update-trigger", width=150, minwidth=130)
+		self.tree.column("DSCP", width=110, minwidth=100)
+		self.tree.column("Priority", width=110, minwidth=100)
+		self.tree.column("Dependency", width=130, minwidth=120)
+		self.tree.column("Receivers", width=120, minwidth=110)
+		self.tree.column("Push source", width=130, minwidth=120)
 
 		self.tree.heading("Server", text="Server")
 		self.tree.heading("Subscription ID", text="Subscription ID")
@@ -198,7 +201,8 @@ class NewSubscriptionWindow:
 		self.E_Period.grid(row=15, column=1, sticky=E)
 
 		self.L_NoSyncOnStart = Label(self.topframe, text="    no-synch-on-start: ").grid(row=16, sticky=W)
-		self.CB_NoSyncOnStart = Checkbutton(self.topframe, onvalue=1, offvalue=0)
+		self.varSync = IntVar()
+		self.CB_NoSyncOnStart = Checkbutton(self.topframe, onvalue=1, offvalue=0, variable=self.varSync)
 		self.CB_NoSyncOnStart.grid(row=16, column=1)
 
 		self.L_DampeningPeriod = Label(self.topframe, text="    dampening-period: ").grid(row=17, sticky=W)
@@ -206,11 +210,14 @@ class NewSubscriptionWindow:
 		self.E_DampeningPeriod.grid(row=17, column=1, sticky=E)
 
 		self.L_ExcludedChange = Label(self.topframe, text="    excluded-change: ").grid(row=18, sticky=W)
-		self.CB_ExcludedChangeCr = Checkbutton(self.topframe, text="creation", onvalue=1, offvalue=0)
+		self.varCr = IntVar()
+		self.varMod = IntVar()
+		self.varDel = IntVar()
+		self.CB_ExcludedChangeCr = Checkbutton(self.topframe, text="creation", onvalue=1, offvalue=0, variable=self.varCr)
 		self.CB_ExcludedChangeCr.grid(row=18, column=1)
-		self.CB_ExcludedChangeMod = Checkbutton(self.topframe, text="modify", onvalue=1, offvalue=0)
+		self.CB_ExcludedChangeMod = Checkbutton(self.topframe, text="modify", onvalue=1, offvalue=0, variable=self.varMod)
 		self.CB_ExcludedChangeMod.grid(row=19, column=1)
-		self.CB_ExcludedChangeDel = Checkbutton(self.topframe, text="deletion", onvalue=1, offvalue=0)
+		self.CB_ExcludedChangeDel = Checkbutton(self.topframe, text="deletion", onvalue=1, offvalue=0, variable=self.varDel)
 		self.CB_ExcludedChangeDel.grid(row=20, column=1)
 
 
@@ -305,17 +312,23 @@ class NewSubscriptionWindow:
 			self.noSyncOnStart = None
 			self.exclude = None
 		else:
-			self.noSyncOnStart = self.CB_NoSyncOnStart.get()
-			self.period = self.E_DampeningPeriod()
-			if self.oeriod == "":
+			self.noSyncOnStart = self.varSync.get()
+			if self.noSyncOnStart == 0:
+				self.noSyncOnStart = None
+			self.period = self.E_DampeningPeriod.get()
+			if self.period == "":
 				print("dampeningPeriod mandatory")
 				return
-			if self.CB_ExcludedChangeCr.get():
+			if self.varCr.get():
 				self.exclude.append("creation")
-			if self.CB_ExcludedChangeMod.get():
+			if self.varMod.get():
 				self.exclude.append("modify")
-			if self.CB_ExcludedChangeDel.get():
+			if self.varDel.get():
 				self.exclude.append("deletion")
+			self.excludeStr = ', '.join(self.exclude)
+			if self.excludeStr == "":
+				self.excludeStr = None
+				
 
 		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
 			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
@@ -326,7 +339,7 @@ class NewSubscriptionWindow:
 			update_filter=self.filterTuple,	sub_start_time=self.subStartTime, 
 			sub_stop_time=self.subStopTime,	dscp=self.dscp, priority=self.subPriority, 
 			dependency=self.subDependency, update_trigger=self.updateTrigger, period=self.period, 
-			no_sync_on_start=self.noSyncOnStart, excluded_change=self.exclude)
+			no_sync_on_start=self.noSyncOnStart, excluded_change=self.excludeStr)
 
 		print(self.rpc_reply)
 
