@@ -23,6 +23,13 @@ from ncclient.operations.errors import OperationError, TimeoutExpiredError, Miss
 
 import logging
 logger = logging.getLogger("ncclient.operations.rpc")
+logger.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 class RPCError(OperationError):
@@ -298,7 +305,7 @@ class RPC(object):
 
     def _wrap(self, subele):
         # internal use
-        ele = new_ele("rpc", {"message-id": self._id},
+        ele = wrap_ele("rpc", {"message-id": self._id, "xmlns": "urn:ietf:params:xml:ns:netconf:base:1.0"},
                       **self._device_handler.get_xml_extra_prefix_kwargs())
         ele.append(subele)
         rpcstring = to_xml(ele) + "]]>]]>"

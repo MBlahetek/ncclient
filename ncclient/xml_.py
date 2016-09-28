@@ -203,4 +203,6 @@ class NCElement(object):
 
 new_ele = lambda tag, attrs={}, **extra: etree.Element(qualify(tag), attrs, **extra)
 
+wrap_ele = lambda tag, attrs={}, **extra: etree.Element(tag, attrs, **extra)
+
 sub_ele = lambda parent, tag, attrs={}, **extra: etree.SubElement(parent, qualify(tag), attrs, **extra)

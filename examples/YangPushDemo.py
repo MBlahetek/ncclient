@@ -198,7 +198,7 @@ class NewSubscriptionWindow:
 		
 		self.L_Period = Label(self.topframe, text="    period: ").grid(row=15, sticky=W)
 		self.E_Period = Entry(self.topframe)
-		self.E_Period.insert(END, "10")
+		self.E_Period.insert(END, "1000")
 		self.E_Period.grid(row=15, column=1, sticky=E)
 
 		self.L_NoSyncOnStart = Label(self.topframe, text="    no-synch-on-start: ").grid(row=16, sticky=W)
@@ -329,8 +329,14 @@ class NewSubscriptionWindow:
 				self.excludeStr = None
 				
 
-		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
-			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
+		self.session = manager.connect(
+			host=self.host, port=2830, 
+			username=self.user, 
+			password=self.password, 
+			device_params={'name':'opendaylight'}, 
+			hostkey_verify=False, 
+			look_for_keys=False, 
+			allow_agent=False)
 
 		self.rpc_reply = self.session.establish_subscription(callback=self.controller.callback, 
 			errback=self.controller.errback, manager=self.session, encoding=self.encoding, 
