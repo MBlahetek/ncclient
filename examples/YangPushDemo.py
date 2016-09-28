@@ -309,7 +309,7 @@ class NewSubscriptionWindow:
 				print("period mandatory")
 				return
 			self.noSyncOnStart = None
-			self.exclude = None
+			self.excludeStr = None
 		else:
 			self.noSyncOnStart = self.varSync.get()
 			if self.noSyncOnStart == 0:
