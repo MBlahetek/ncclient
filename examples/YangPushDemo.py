@@ -85,7 +85,9 @@ class MainApplication:
 		self.tree.insert(parent="", index="end", iid=self.subID, 
 			values=(server, self.subID, "active"))
 
-
+	#def del_Subscription(self, subID):
+		
+		#self.tree.
 
 	def update_Subscription(self):
 		""" .set(iid, column=None, value=None)
@@ -257,10 +259,8 @@ class NewSubscriptionWindow:
 		self.updateCriteria = self.E_Criteria.get()
 
 		if self.updateFilter != "None" and self.updateCriteria == "":
-			print("Criteria not in a proper format!")
-			return
-
-		if 	self.updateFilter != "None":
+			self.updateCriteria = None
+		elif self.updateFilter != "None" and self.updateCriteria != None:
 			if self.updateFilter == "subtree":
 				if self.updateCriteria[0] == "<":
 					self.filterTuple = (self.updateFilter, self.updateCriteria)
@@ -342,7 +342,7 @@ class NewSubscriptionWindow:
 
 		print(self.rpc_reply)
 
-		close_window()
+		self.close_window()
 
 		#if self.rpc_reply == "ok":
 		#	self.controller.add_Subscription(self.rpc_reply, self.host)
@@ -408,7 +408,7 @@ class GetSubscriptionWindow:
 
 		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
 			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
-		
+
 		if self.subID == "":
 			self.rpc_reply = self.session.get(filter=("xpath", "/subscriptions"))
 		else:
@@ -418,7 +418,7 @@ class GetSubscriptionWindow:
 
 		print(self.rpc_reply)	
 
-		close_window()
+		self.close_window()
 
 	def close_window(self):
 		self.master.destroy()

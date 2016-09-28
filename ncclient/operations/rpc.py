@@ -360,11 +360,15 @@ class RPC(object):
 
     def deliver_reply(self, raw):
         # internal use
+        print("rpc.py deliver reply line 363:")
+        print(raw)
         self._reply = self.REPLY_CLS(raw)
         self._event.set()
 
     def deliver_error(self, err):
         # internal use
+        print("rpc.py deliver error line 370:")
+        print(err)
         self._error = err
         self._event.set()
 
