@@ -1,10 +1,12 @@
 from Tkinter import *
 from ncclient import manager
 from ncclient.operations.subscribe_yangpush import *
+from datetime import datetime
 import sys, os, warnings
 import Tkinter as tk
 import ttk
 import tkFont
+
 
 class MainApplication:
 	def __init__(self, master):
@@ -76,8 +78,9 @@ class MainApplication:
 		print(notification.data_xml)
 
 	def errback(self, ex):
-		print("errback called")
+		print("errback called. msg:")
 		print(ex)
+		print("errback called. msg end")
 
 	def add_Subscription(self, rpcReply, server):
 		#extract the subID out of the rpcReply XML file
@@ -155,10 +158,12 @@ class NewSubscriptionWindow:
 
 		self.L_StartTime = Label(self.topframe, text="startTime: ").grid(row=5, sticky=W)
 		self.E_StartTime = Entry(self.topframe)
+		self.E_StartTime.insert(END, "YYYY/MM/DD HH:MM:SS.ffffff")
 		self.E_StartTime.grid(row=5, column=1, sticky=E)
 
 		self.L_StopTime = Label(self.topframe, text="stopTime: ").grid(row=6, sticky=W)
 		self.E_StopTime = Entry(self.topframe)
+		self.E_StopTime.insert(END, "YYYY/MM/DD HH:MM:SS.ffffff")
 		self.E_StopTime.grid(row=6, column=1, sticky=E)
 
 		self.L_UpdateFilter = Label(self.topframe, text="update-filter: ").grid(row=7, sticky=W)
@@ -171,10 +176,12 @@ class NewSubscriptionWindow:
 
 		self.L_SubStartTime = Label(self.topframe, text="subscription-start-time: ").grid(row=9, sticky=W)
 		self.E_SubStartTime = Entry(self.topframe)
+		self.E_SubStartTime.insert(END, "YYYY/MM/DD HH:MM:SS.ffffff")
 		self.E_SubStartTime.grid(row=9, column=1, sticky=E)
 
 		self.L_SubStopTime = Label(self.topframe, text="subscription-stop-time: ").grid(row=10, sticky=W)
 		self.E_SubStopTime = Entry(self.topframe)
+		self.E_SubStopTime.insert(END, "YYYY/MM/DD HH:MM:SS.ffffff")
 		self.E_SubStopTime.grid(row=10, column=1, sticky=E)
 
 		self.L_Dscp = Label(self.topframe, text="dscp: ").grid(row=11, sticky=W)
@@ -245,13 +252,13 @@ class NewSubscriptionWindow:
 		else:
 			self.stream = None
 
-		if self.E_StartTime.get() != "":
-			self.startTime = self.E_StartTime.get()
+		if self.E_StartTime.get() != ("" or "YYYY/MM/DD HH:MM:SS.ffffff"):
+			self.startTime = datetime.strptime(self.E_StartTime.get(), '%Y/%m/%d %H:%M:%S.%f')
 		else:
 			self.startTime = None
 
-		if self.E_StopTime.get() != "":
-			self.stopTime = self.E_StopTime.get()
+		if self.E_StopTime.get() != ("" or "YYYY/MM/DD HH:MM:SS.ffffff"):
+			self.stopTime = datetime.strptime(self.E_StopTime.get(), '%Y/%m/%d %H:%M:%S.%f')
 		else:
 			self.stopTime = None
 
@@ -276,13 +283,13 @@ class NewSubscriptionWindow:
 		else:
 			self.filterTuple = None
 
-		if self.E_SubStartTime.get() != "":
-			self.subStartTime = self.E_SubStartTime.get()
+		if self.E_SubStartTime.get() != ("" or "YYYY/MM/DD HH:MM:SS.ffffff"):
+			self.subStartTime = datetime.strptime(self.E_SubStartTime.get(), '%Y/%m/%d %H:%M:%S.%f')
 		else:
 			self.subStartTime = None
 
-		if self.E_SubStopTime.get() != "":
-			self.subStopTime = self.E_SubStopTime.get()
+		if self.E_SubStopTime.get() != ("" or "YYYY/MM/DD HH:MM:SS.ffffff"):
+			self.subStopTime = datetime.strptime(self.E_SubStopTime.get(), '%Y/%m/%d %H:%M:%S.%f')
 		else:
 			self.subStopTime = None			
 
