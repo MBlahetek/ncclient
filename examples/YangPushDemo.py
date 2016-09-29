@@ -413,14 +413,17 @@ class GetSubscriptionWindow:
 		self.subID = self.E_SubID.get()
 
 		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
-			password=self.password, hostkey_verify=False, look_for_keys=False, allow_agent=False)
+			password=self.password, device_params={'name':'opendaylight'}, hostkey_verify=False, look_for_keys=False, allow_agent=False)
+		
+		filterxml = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"></subscriptions>"""
+		filterxmlID = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"><subscription><subscription-id>%s</subscription-id></subscription></subscriptions>""" % self.subID
 
 		if self.subID == "":
-			self.rpc_reply = self.session.get(filter=("xpath", "/subscriptions"))
+			self.rpc_reply = self.session.get(filter=("subtree", filterxml))
 		else:
-			self.rpc_reply = self.session.get(filter=("xpath", "/subscriptions/subscription/subscription-id/%s" % self.subID))
+			self.rpc_reply = self.session.get(filter=("subtree", filterxmlID))
 		
-		self.controller.add_Subscription(self.rpc_reply)
+		#self.controller.add_Subscription(self.rpc_reply)
 
 		print(self.rpc_reply)	
 

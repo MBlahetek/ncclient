@@ -501,39 +501,29 @@ class SSHSession(Session):
         q = self._q
 
         def start_delim(data_len): return '\n#%s\n'%(data_len)
-        print("transport/ssh.py line 497: start delim")
         try:
             while True:
                 # select on a paramiko ssh channel object does not ever return it in the writable list, so channels don't exactly emulate the socket api
                 r, w, e = select([chan], [], [], TICK)
                 # will wakeup evey TICK seconds to check if something to send, more if something to read (due to select returning chan in readable list)
                 if r:
-                    print("Marker line 504")
                     data = chan.recv(BUF_SIZE)
                     if data:
-                        print("Marker line 507")
                         self._buffer.write(data)
                         if self._server_capabilities:
-                            print("Marker line 510")
                             if 'urn:ietf:params:netconf:base:1.1' in self._server_capabilities and 'urn:ietf:params:netconf:base:1.1' in self._client_capabilities:
-                                print("Marker line 512")
                                 logger.debug("Selecting netconf:base:1.1 for encoding")
                                 self._parse11()
                             elif 'urn:ietf:params:netconf:base:1.0' in self._server_capabilities or 'urn:ietf:params:xml:ns:netconf:base:1.0' in self._server_capabilities or 'urn:ietf:params:netconf:base:1.0' in self._client_capabilities:
-                                print("Marker line 516")
                                 logger.debug("Selecting netconf:base:1.0 for encoding")
                                 self._parse10()
                             else: 
-                                print("Marker line 519")
                                 raise Exception
                         else:
-                            print("Marker line 523")
                             self._parse10() # HELLO msg uses EOM markers.
                     else:
-                        print("Marker line 526")
                         raise SessionCloseError(self._buffer.getvalue())
                 if not q.empty() and chan.send_ready():
-                    print("Marker line 529")
                     logger.debug("Sending message")
                     data = q.get()
                     try:
@@ -541,35 +531,26 @@ class SSHSession(Session):
                         validated_element(data, tags='{urn:ietf:params:xml:ns:netconf:base:1.0}hello')
                         data = "%s%s"%(data, MSG_DELIM)
                     except XMLError:
-                        print("Marker line 537")
                         # this is not a HELLO msg
                         # we publish v1.1 support
                         if 'urn:ietf:params:netconf:base:1.1' in self._client_capabilities:
-                            print("Marker line 541")
                             if self._server_capabilities:
-                                print("Marker line 543")
                                 if 'urn:ietf:params:netconf:base:1.1' in self._server_capabilities:
-                                    print("Marker line 545")
                                     # send using v1.1 chunked framing
                                     data = "%s%s%s"%(start_delim(len(data)), data, END_DELIM)
                                 elif 'urn:ietf:params:netconf:base:1.0' in self._server_capabilities or 'urn:ietf:params:xml:ns:netconf:base:1.0' in self._server_capabilities:
                                     # send using v1.0 EOM markers
-                                    print("Marker line 550")
                                     data = "%s%s"%(data, MSG_DELIM)
                                 else: 
-                                    print("Marker line 553")
                                     raise Exception
                             else:
-                                print("Marker line 556")
                                 logger.debug('HELLO msg was sent, but server capabilities are still not known')
                                 raise Exception
                         # we publish only v1.0 support
                         else:
-                            print("Marker line 561")
                             # send using v1.0 EOM markers
                             data = "%s%s"%(data, MSG_DELIM)
                     finally:
-                        print("Marker line 565")
                         logger.debug("Sending: %s", data)
                         while data:
                             n = chan.send(data)
@@ -578,7 +559,6 @@ class SSHSession(Session):
                             data = data[n:]
         except Exception as e:
             logger.debug("Broke out of main loop, error=%r", e)
-            print("Marker ssh.py line 574")
             self._dispatch_error(e)
             self.close()
 

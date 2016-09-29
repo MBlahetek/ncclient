@@ -16,19 +16,30 @@ import sys, os, warnings
 import re
 import ncclient.manager
 import time
+import logging
 
 warnings.simplefilter("ignore", DeprecationWarning)
 
 from ncclient.operations import util
 from ncclient.operations.rpc import *
+from ncclient.operations.errors import NotificationError, ReconnectError, OperationError
 from lxml import etree
 from datetime import datetime, timedelta
 from dateutil.parser import parse
-from ncclient.operations.errors import NotificationError, ReconnectError
+
+logger = logging.getLogger('ncclient.transport.session')
+logger.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification"
 YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push"
 EVENT_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-event-notifications"
+BASE_NS_1_0 = "urn:ietf:params:xml:ns:netconf:base:1.0"
 
 
 class NotificationType(object):
@@ -164,9 +175,23 @@ class EstablishSubscription(RPC):
 
         if type(time) is not datetime:
             raise TypeError("%s is not a valid %s" % (str(time), time_string))
-        timeTag = etree.Element(time_string,EVENT_NOTIFICATION_NS)
+        timeTag = etree.Element(time_string, xmlns=EVENT_NOTIFICATION_NS)
         timeTag.text = time.isoformat() + "Z"
         return timeTag
+    
+    def build_filter(self, updatefilter):
+        type = updatefilter[0]
+        path = updatefilter[1]
+        if type == "subtree":
+            filter_ele = etree.Element("filter", type=type, xmlns=EVENT_NOTIFICATION_NS)
+            filter_ele.append(to_ele(path))
+            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="subtree">
+            #<ns0:devices xmlns:ns0="http://tail-f.com/ns/ncs"><device><name/></device></ns0:devices>
+        else:
+            filter_ele = etree.Element("filter", select=path, type=type, xmlns=EVENT_NOTIFICATION_NS)
+            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="xpath" select="/devices/device/name"/>
+               
+        return filter_ele
 
     def request(self, callback, errback, manager=None, retries=20, delay=1,
         encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
@@ -243,8 +268,6 @@ class EstablishSubscription(RPC):
 
         :seealso: :ref:`filter_params`"""
 
-        print ("EstablishSubscription: building XML...")
-
         # catch possible errors
 
         if callback is None:
@@ -283,13 +306,13 @@ class EstablishSubscription(RPC):
             subscription_node.append(self.datetime_to_rfc("stopTime", stop_time))
 
         if update_filter is not None:
-            subscription_node.append(util.build_filter(update_filter), xmlns=YANGPUSH_NOTIFICATION_NS)
+            subscription_node.append(self.build_filter(update_filter))
 
         if sub_start_time is not None:
-            subscription_node.append(self.datetime_to_rfc("subscription-start-time", sub_start_time), xmlns=YANGPUSH_NOTIFICATION_NS)
+            subscription_node.append(self.datetime_to_rfc("subscription-start-time", sub_start_time))
 
         if sub_stop_time is not None:
-            subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time), xmlns=YANGPUSH_NOTIFICATION_NS)
+            subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time))
 
         if dscp is not None:
             dscpTag = etree.Element("dscp", xmlns=YANGPUSH_NOTIFICATION_NS)
@@ -326,10 +349,8 @@ class EstablishSubscription(RPC):
                 excluded_changeTag = etree.Element("excluded-change", xmlns=YANGPUSH_NOTIFICATION_NS)
                 excluded_changeTag.text = excluded_change
                 subscription_node.append(excluded_changeTag)
-
-        print("EstablishSubscription: XML string built!")
-        print("EstablishSubscription: add NotificationListener...")
-
+                
+        logger.debug('XML-string for establish-subscription RPC build')
         # add NotificationListener to retrieve the notifications
 
         self.session.add_listener(YangPushNotificationListener(callback, errback, 
@@ -338,27 +359,9 @@ class EstablishSubscription(RPC):
             start_time=start_time, stop_time=stop_time, dscp=dscp, priority=priority,
             dependency=dependency, update_trigger=update_trigger, period=period,
             no_sync_on_start=no_sync_on_start, excluded_change=excluded_change))
-
-        print("EstablishSubscription: NotificationListener added!")
-        print("EstablishSubscription: send RPC...")
-
+        
+        logger.debug('YangPushNotificationListener added')
         # send the RPC
-        """
-        test_node = etree.Element(qualify("establish-subscription", EVENT_NOTIFICATION_NS))
-        
-        encodingTag = etree.Element("encoding")
-        encodingTag.text = "encode-xml"
-        test_node.append(encodingTag)
-        
-        streamTag = etree.Element("stream")
-        streamTag.text = "push-update"
-        test_node.append(streamTag)
-        
-        periodTag = etree.Element(qualify("period",YANGPUSH_NOTIFICATION_NS))
-        periodTag.text = "30"
-        test_node.append(periodTag)
-        
-        return self._request(test_node)"""
         return self._request(subscription_node)
 
 

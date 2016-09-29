@@ -57,7 +57,6 @@ class Session(Thread):
 
     def _dispatch_message(self, raw):
         try:
-            print("transport/session.py line 53: try to parse")
             root = parse_root(raw)
         except Exception as e:
             device_handled_raw=self._device_handler.handle_raw_dispatch(raw)
@@ -251,8 +250,7 @@ class HelloHandler(SessionListener):
             map(fun, capabilities)
         else:
             list(map(fun, capabilities))
-        hellostring = to_xml(hello) + "]]>]]>"
-        print(hellostring)
+        hellostring = to_xml(hello)
         return hellostring
 
     @staticmethod

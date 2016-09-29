@@ -145,7 +145,6 @@ class RPCReply(object):
 
     def parse(self):
         "Parses the *rpc-reply*."
-        print("parsing rpc-reply")
         if self._parsed: return
         root = self._root = to_ele(self._raw) # The <rpc-reply> element
         # Per RFC 4741 an <ok/> tag is sent when there are no errors or warnings
@@ -205,7 +204,6 @@ class RPCReplyListener(SessionListener): # internal use
                 instance._device_handler = device_handler
                 #instance._pipelined = session.can_pipeline
                 session.add_listener(instance)
-                print("RPCReplyListner added!")
             return instance
 
     def register(self, id, rpc):
@@ -308,8 +306,7 @@ class RPC(object):
         ele = wrap_ele("rpc", {"message-id": self._id, "xmlns": "urn:ietf:params:xml:ns:netconf:base:1.0"},
                       **self._device_handler.get_xml_extra_prefix_kwargs())
         ele.append(subele)
-        rpcstring = to_xml(ele) + "]]>]]>"
-        print (rpcstring)
+        rpcstring = to_xml(ele)
         return rpcstring
 
     def _request(self, op):
@@ -367,15 +364,11 @@ class RPC(object):
 
     def deliver_reply(self, raw):
         # internal use
-        print("rpc.py deliver reply line 363:")
-        print(raw)
         self._reply = self.REPLY_CLS(raw)
         self._event.set()
 
     def deliver_error(self, err):
-        # internal use
-        print("rpc.py deliver error line 370:")
-        print(err)
+        # internal uses
         self._error = err
         self._event.set()
 
