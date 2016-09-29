@@ -167,7 +167,7 @@ class EstablishSubscription(RPC):
 
 
 
-    def datetime_to_rfc(self, time_string, time):
+    def datetime_to_rfc(self, time_string, time, namespace):
 
         """Validates user-inputted time and 
         converts it to RFC 3339 time format to 
@@ -175,7 +175,7 @@ class EstablishSubscription(RPC):
 
         if type(time) is not datetime:
             raise TypeError("%s is not a valid %s" % (str(time), time_string))
-        timeTag = etree.Element(time_string, xmlns=EVENT_NOTIFICATION_NS)
+        timeTag = etree.Element(time_string, xmlns=namespace)
         timeTag.text = time.isoformat() + "Z"
         return timeTag
     
@@ -300,19 +300,19 @@ class EstablishSubscription(RPC):
             subscription_node.append(streamTag)
 
         if start_time is not None:
-            subscription_node.append(self.datetime_to_rfc("startTime", start_time))
+            subscription_node.append(self.datetime_to_rfc("startTime", start_time, EVENT_NOTIFICATION_NS))
 
         if stop_time is not None:
-            subscription_node.append(self.datetime_to_rfc("stopTime", stop_time))
+            subscription_node.append(self.datetime_to_rfc("stopTime", stop_time, EVENT_NOTIFICATION_NS))
 
         if update_filter is not None:
             subscription_node.append(self.build_filter(update_filter))
 
         if sub_start_time is not None:
-            subscription_node.append(self.datetime_to_rfc("subscription-start-time", sub_start_time))
+            subscription_node.append(self.datetime_to_rfc("subscription-start-time", sub_start_time, YANGPUSH_NOTIFICATION_NS))
 
         if sub_stop_time is not None:
-            subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time))
+            subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time, YANGPUSH_NOTIFICATION_NS))
 
         if dscp is not None:
             dscpTag = etree.Element("dscp", xmlns=YANGPUSH_NOTIFICATION_NS)
