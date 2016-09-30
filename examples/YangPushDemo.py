@@ -84,7 +84,7 @@ class MainApplication:
 		print(ex)
 		print("errback called. msg end")
 
-	def add_Subscription(self, subID, server, session):
+	def add_new_subscription(self, subID, server, session):
 			
 		FILTER_SNIPPET = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"><subscription><subscription-id>%s</subscription-id></subscription></subscriptions>""" % subID
 
@@ -92,9 +92,24 @@ class MainApplication:
 		
 		root = ET.fromstring(rpc_reply.xml)
 		subxml = root[0][0][0]
+		self.parse_to_treeview(subxml, server, session)
+	
+	def add_subscription(self, singlenode, rpc_reply, server, session):
+		
+		root = ET.fromstring(rpc_reply.xml)
+		
+		if singlenode:
+			subxml = root[0][0][0]
+			self.parse_to_treeview(subxml, server, session)
+		else:
+			subxml = root[0][0]
+			for child in subxml:
+				self.parse_to_treeview(child, server, session)
+
+	def parse_to_treeview(self, xml, server, session):	
 		configSub = ""
 		filter = ""
-		for child in subxml:
+		for child in xml:
 			if child.tag[-len("subscription-id"):] == "subscription-id":
 				subID = child.text
 			if child.tag[-len("subscription-start-time"):] == "subscription-start-time":
@@ -428,7 +443,7 @@ class NewSubscriptionWindow:
 				self.subID = child.text
 		
 		if self.rpc_reply.ok:
-			self.controller.add_Subscription(self.subID, self.host, self.session)
+			self.controller.add_new_subscription(self.subID, self.host, self.session)
 			self.close_window()
 
 	def updateTriggerChange(self, a, b, c):
@@ -496,12 +511,14 @@ class GetSubscriptionWindow:
 
 		if self.subID == "":
 			self.rpc_reply = self.session.get(filter=("subtree", filterxml))
+			singlenode = False
 		else:
 			self.rpc_reply = self.session.get(filter=("subtree", filterxmlID))
-		
-		#self.controller.add_Subscription(self.rpc_reply)
-
+			singlenode = True
+			
 		print(self.rpc_reply)	
+		
+		self.controller.add_subscription(singlenode, self.rpc_reply, self.host, self.session)
 
 		self.close_window()
 
