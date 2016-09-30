@@ -6,6 +6,7 @@ import sys, os, warnings
 import Tkinter as tk
 import ttk
 import tkFont
+import xml.etree.ElementTree as ET
 
 
 class MainApplication:
@@ -16,13 +17,16 @@ class MainApplication:
 
 		self.mainframe = tk.Frame(self.master)
 		self.buttonframe = tk.Frame(self.master)
+		
+
+		
 		self.tree = ttk.Treeview(self.mainframe, height=20)
 		self.tree['show'] = 'headings'
 
 		self.tree["columns"]=("Server","Subscription ID", "Configured Subscription", 
 			"Status", "Stream", "Filter", "Replay start time", "Replay stop time",
-			"Encoding", "Start time", "Stop time", "Update-trigger", "DSCP", "Priority",
-			"Dependency", "Receivers", "Push source")
+			"Encoding", "Start time", "Stop time", "Update-trigger", "Period", "DSCP", "Priority",
+			"Dependency")
 		self.tree.column("Server", width=150, minwidth=150)
 		self.tree.column("Subscription ID", width=160, minwidth=150)
 		self.tree.column("Configured Subscription", width=170, minwidth=150)
@@ -35,11 +39,10 @@ class MainApplication:
 		self.tree.column("Start time", width=140, minwidth=130)
 		self.tree.column("Stop time", width=140, minwidth=130)
 		self.tree.column("Update-trigger", width=150, minwidth=130)
+		self.tree.column("Period", width=150, minwidth=130)
 		self.tree.column("DSCP", width=110, minwidth=100)
 		self.tree.column("Priority", width=110, minwidth=100)
 		self.tree.column("Dependency", width=130, minwidth=120)
-		self.tree.column("Receivers", width=120, minwidth=110)
-		self.tree.column("Push source", width=130, minwidth=120)
 
 		self.tree.heading("Server", text="Server")
 		self.tree.heading("Subscription ID", text="Subscription ID")
@@ -53,11 +56,10 @@ class MainApplication:
 		self.tree.heading("Start time", text="Start time")
 		self.tree.heading("Stop time", text="Stop time")
 		self.tree.heading("Update-trigger", text="Update-trigger")
+		self.tree.heading("Period", text="Period")
 		self.tree.heading("DSCP", text="DSCP")
 		self.tree.heading("Priority", text="Priority")
 		self.tree.heading("Dependency", text="Dependency")
-		self.tree.heading("Receivers", text="Receivers")
-		self.tree.heading("Push source", text="Push source")
 
 		self.tree.grid()
 
@@ -82,15 +84,68 @@ class MainApplication:
 		print(ex)
 		print("errback called. msg end")
 
-	def add_Subscription(self, rpcReply, server):
-		#extract the subID out of the rpcReply XML file
-		self.subID = rpcReply
-		self.tree.insert(parent="", index="end", iid=self.subID, 
-			values=(server, self.subID, "active"))
+	def add_Subscription(self, subID, server, session):
+			
+		FILTER_SNIPPET = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"><subscription><subscription-id>%s</subscription-id></subscription></subscriptions>""" % subID
 
-	#def del_Subscription(self, subID):
+		rpc_reply = session.get(filter=("subtree", FILTER_SNIPPET))
 		
-		#self.tree.
+		root = ET.fromstring(rpc_reply.xml)
+		subxml = root[0][0][0]
+		configSub = ""
+		filter = ""
+		for child in subxml:
+			if child.tag[-len("subscription-id"):] == "subscription-id":
+				subID = child.text
+			if child.tag[-len("subscription-start-time"):] == "subscription-start-time":
+				subStartTime = child.text
+			if child.tag[-len("subscription-stop-time"):] == "subscription-stop-time":
+				subStopTime = child.text
+				if subStopTime is None:
+					subStopTime = "not set"
+			if child.tag[-len("dscp"):] == "dscp":
+				dscp = child.text
+			if child.tag[-len("subscription-priority"):] == "subscription-priority":
+				priority = child.text
+			if child.tag[-len("subscription-dependency"):] == "subscription-dependency":
+				dependency = child.text
+			if child.tag[-len("encoding"):] == "encoding":
+				encoding = child.text
+			if child.tag[-len("stream"):] == "stream":
+				stream = child.text
+			if child.tag[-len("startTime"):] == "startTime":
+				startTime = child.text
+				if startTime == "-1":
+					startTime = "not set"
+			if child.tag[-len("stopTime"):] == "stopTime":
+				stopTime = child.text
+				if stopTime == "-1":
+					stopTime = "not set"
+			if child.tag[-len("period"):] == "period":
+				period = child.text
+				updateTrigger = "periodic"
+			if child.tag[-len("dampening-period"):] == "dampening-period":
+				period = child.text
+				updateTrigger = "on-change"
+		
+		self.tree.insert(parent="", index="end", iid=subID, 
+			values=(server, 
+				subID, 
+				configSub, 
+				"active", 
+				stream, 
+				filter, 
+				startTime, 
+				stopTime, 
+				encoding, 
+				subStartTime, 
+				subStopTime, 
+				updateTrigger, 
+				period, 
+				dscp, 
+				priority, 
+				dependency))
+
 
 	def update_Subscription(self):
 		""" .set(iid, column=None, value=None)
@@ -112,10 +167,12 @@ class MainApplication:
 			self.default_font.configure(size=11)
 			self.master.option_add("*Font", self.default_font)
 			self.default_style = ttk.Style()
-			self.default_style.configure(".", font=("Helvetica",11))
-			self.default_style.configure("Treeview", font=("Helvetica", 11))
-			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11))
+			self.default_style.configure(".", font=("Helvetica",11), rowheight=28)
+			self.default_style.configure("Treeview", font=("Helvetica", 11), rowheight=28)
+			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11), rowheight=28)
 			
+
+		
 	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
 		self.app = GetSubscriptionWindow(self.newWindow, self)
@@ -345,23 +402,35 @@ class NewSubscriptionWindow:
 			look_for_keys=False, 
 			allow_agent=False)
 
-		self.rpc_reply = self.session.establish_subscription(callback=self.controller.callback, 
-			errback=self.controller.errback, manager=self.session, encoding=self.encoding, 
-			stream=self.stream, start_time=self.startTime, stop_time=self.stopTime, 
-			update_filter=self.filterTuple,	sub_start_time=self.subStartTime, 
-			sub_stop_time=self.subStopTime,	dscp=self.dscp, priority=self.subPriority, 
-			dependency=self.subDependency, update_trigger=self.updateTrigger, period=self.period, 
-			no_sync_on_start=self.noSyncOnStart, excluded_change=self.excludeStr)
+		self.rpc_reply = self.session.establish_subscription(
+			callback=self.controller.callback, 
+			errback=self.controller.errback, 
+			manager=self.session, 
+			encoding=self.encoding, 
+			stream=self.stream, 
+			start_time=self.startTime, 
+			stop_time=self.stopTime, 
+			update_filter=self.filterTuple,	
+			sub_start_time=self.subStartTime, 
+			sub_stop_time=self.subStopTime,	
+			dscp=self.dscp, 
+			priority=self.subPriority, 
+			dependency=self.subDependency, 
+			update_trigger=self.updateTrigger, 
+			period=self.period, 
+			no_sync_on_start=self.noSyncOnStart, 
+			excluded_change=self.excludeStr)
+		
+		xmlroot = ET.fromstring(self.rpc_reply.xml)	
+		
+		for child in xmlroot:
+			if child.tag[-len("subscription-id"):] == "subscription-id":
+				self.subID = child.text
+		
+		if self.rpc_reply.ok:
+			self.controller.add_Subscription(self.subID, self.host, self.session)
+			self.close_window()
 
-		print(self.rpc_reply)
-
-		self.close_window()
-
-		#if self.rpc_reply == "ok":
-		#	self.controller.add_Subscription(self.rpc_reply, self.host)
-		#	self.master.destroy()
-		#else:
-		#	print("Failed to subscribe!")
 	def updateTriggerChange(self, a, b, c):
 		if self.SB_UpdateTrigger.get() == "periodic":
 			intvar = self.E_DampeningPeriod.get()
