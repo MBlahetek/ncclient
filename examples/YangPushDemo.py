@@ -76,7 +76,9 @@ class MainApplication:
 
 	def callback(self, notification):
 		print("callback called")
+		print("print notification:")
 		print(notification)
+		print("print notification.data_xml:")
 		print(notification.data_xml)
 
 	def errback(self, ex):
@@ -112,6 +114,8 @@ class MainApplication:
 		for child in xml:
 			if child.tag[-len("subscription-id"):] == "subscription-id":
 				subID = child.text
+				if self.tree.exists(subID):
+					return
 			if child.tag[-len("subscription-start-time"):] == "subscription-start-time":
 				subStartTime = child.text
 			if child.tag[-len("subscription-stop-time"):] == "subscription-stop-time":
@@ -160,7 +164,7 @@ class MainApplication:
 				dscp, 
 				priority, 
 				dependency))
-
+		
 
 	def update_Subscription(self):
 		""" .set(iid, column=None, value=None)

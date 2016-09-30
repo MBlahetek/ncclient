@@ -36,7 +36,7 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification"
+NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
 YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push"
 EVENT_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-event-notifications"
 BASE_NS_1_0 = "urn:ietf:params:xml:ns:netconf:base:1.0"
@@ -375,7 +375,7 @@ class YangPushNotificationListener(SessionListener):
         encoding, stream, update_filter, start_time, stop_time,
         dscp, priority, dependency, update_trigger, period,
         no_sync_on_start, excluded_change):
-        """Called by CreateSubscription when a new NotificationListener is added to a session.
+        """Called by EstablishSubscription when a new YangPushNotificationListener is added to a session.
         used to keep track of connection and subscription info in case connection gets dropped."""
         self.user_callback = user_callback
         self.user_errback = user_errback
