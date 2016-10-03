@@ -68,6 +68,7 @@ class MainApplication:
 		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.new_Subscription).grid(row=1, column=0)
 		self.B_DeleteSubscription = tk.Button(self.buttonframe, text="Delete Subscription", command=self.delete_Subscription).grid(row=1, column=1)
 		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get Subscription", command=self.get_Subscription).grid(row=1, column=2)
+		self.B_Exit = tk.Button(self.buttonframe, text="Exit", command=self.close_window).grid(row=1, column=3)
 
 		self.buttonframe.grid()
 
@@ -177,19 +178,6 @@ class MainApplication:
 		the selected item whose column identifier is the column argument. With three arguments, 
 		the item's value for the specified column is set to the third argument.
 		"""
-
-	def calc_window_size(self, master):
-
-		self.screen_width = master.winfo_screenwidth()
-		self.screen_height = master.winfo_screenheight()
-		if self.screen_width > 2100 and self.screen_height > 1200:
-			self.default_font = tkFont.nametofont("TkDefaultFont")
-			self.default_font.configure(size=11)
-			self.master.option_add("*Font", self.default_font)
-			self.default_style = ttk.Style()
-			self.default_style.configure(".", font=("Helvetica",11), rowheight=28)
-			self.default_style.configure("Treeview", font=("Helvetica", 11), rowheight=28)
-			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11), rowheight=28)
 		
 	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
@@ -202,6 +190,22 @@ class MainApplication:
 	def delete_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
 		self.app = DeleteSubscriptionWindow(self.newWindow, self)
+
+	def calc_window_size(self, master):
+
+		self.screen_width = master.winfo_screenwidth()
+		self.screen_height = master.winfo_screenheight()
+		if self.screen_width > 2100 and self.screen_height > 1200:
+			self.default_font = tkFont.nametofont("TkDefaultFont")
+			self.default_font.configure(size=11)
+			self.master.option_add("*Font", self.default_font)
+			self.default_style = ttk.Style()
+			self.default_style.configure(".", font=("Helvetica",11), rowheight=28)
+			self.default_style.configure("Treeview", font=("Helvetica", 11), rowheight=28)
+			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11), rowheight=28)		
+		
+	def close_window(self):
+		self.master.destroy()
 
 class NewSubscriptionWindow:
 	def __init__(self, master, controller):

@@ -48,7 +48,8 @@ OPERATIONS = {
     "poweroff_machine": operations.PoweroffMachine,
     "reboot_machine": operations.RebootMachine,
     "create_subscription": subscribe.CreateSubscription,
-    "establish_subscription": subscribe_yangpush.EstablishSubscription
+    "establish_subscription": subscribe_yangpush.EstablishSubscription,
+    "delete_subscription": subscribe_yangpush.DeleteSubscription
 }
 
 """
