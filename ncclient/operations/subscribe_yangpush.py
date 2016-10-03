@@ -364,6 +364,18 @@ class EstablishSubscription(RPC):
         # send the RPC
         return self._request(subscription_node)
 
+class DeleteSubscription(RPC):
+    
+    def request(self, callback, errback, subscriptionID, manager=None):
+        
+        delete_subscription_node = etree.Element("delete-subscription", xmlns=EVENT_NOTIFICATION_NS)
+        
+        idTag = etree.Element("subscription-id")
+        idTag.text = subscriptionID
+        delete_subscription_node.append(idTag)
+        
+        return self._request(delete_subscription_node)
+    
 
 class YangPushNotificationListener(SessionListener):
 

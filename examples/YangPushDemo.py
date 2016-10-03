@@ -65,8 +65,9 @@ class MainApplication:
 
 		self.mainframe.grid()
 
-		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.new_Subscription).grid(row=1, column=0)
-		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get Subscription", command=self.get_Subscription).grid(row=1, column=1, sticky=E)
+		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.opWindow("new")).grid(row=1, column=0)
+		self.B_DeleteSubscription = tk.Button(self.buttonframe, text="Delete Subscription", command=self.opWindow).grid(row=1, column=1)
+		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get Subscription", command=self.opWindow).grid(row=1, column=2)
 
 		self.buttonframe.grid()
 
@@ -189,16 +190,15 @@ class MainApplication:
 			self.default_style.configure(".", font=("Helvetica",11), rowheight=28)
 			self.default_style.configure("Treeview", font=("Helvetica", 11), rowheight=28)
 			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11), rowheight=28)
-			
-
 		
-	def get_Subscription(self):
+	def opWindow(self, op):
 		self.newWindow = tk.Toplevel(self.master)
-		self.app = GetSubscriptionWindow(self.newWindow, self)
-		
-	def new_Subscription(self):
-		self.newWindow = tk.Toplevel(self.master)
-		self.app = NewSubscriptionWindow(self.newWindow, self)
+		if op == "get":
+			self.app = GetSubscriptionWindow(self.newWindow, self)
+		elif op == "new":
+			self.app = NewSubscriptionWindow(self.newWindow, self)
+		elif op == "delete":
+			self.app = DeleteSubscriptionWindow(self.newWindow, self)
 
 class NewSubscriptionWindow:
 	def __init__(self, master, controller):
