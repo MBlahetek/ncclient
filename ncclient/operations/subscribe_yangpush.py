@@ -366,7 +366,7 @@ class EstablishSubscription(RPC):
 
 class DeleteSubscription(RPC):
     
-    def request(self, callback, errback, subscriptionID, manager=None):
+    def request(self, subscriptionID):
         
         delete_subscription_node = etree.Element("delete-subscription", xmlns=EVENT_NOTIFICATION_NS)
         

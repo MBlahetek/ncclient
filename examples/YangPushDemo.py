@@ -65,9 +65,9 @@ class MainApplication:
 
 		self.mainframe.grid()
 
-		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.opWindow("new")).grid(row=1, column=0)
-		self.B_DeleteSubscription = tk.Button(self.buttonframe, text="Delete Subscription", command=self.opWindow).grid(row=1, column=1)
-		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get Subscription", command=self.opWindow).grid(row=1, column=2)
+		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.new_Subscription).grid(row=1, column=0)
+		self.B_DeleteSubscription = tk.Button(self.buttonframe, text="Delete Subscription", command=self.delete_Subscription).grid(row=1, column=1)
+		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get Subscription", command=self.get_Subscription).grid(row=1, column=2)
 
 		self.buttonframe.grid()
 
@@ -191,14 +191,17 @@ class MainApplication:
 			self.default_style.configure("Treeview", font=("Helvetica", 11), rowheight=28)
 			self.default_style.configure("Treeview.Heading", font=("Helvetica", 11), rowheight=28)
 		
-	def opWindow(self, op):
+	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
-		if op == "get":
-			self.app = GetSubscriptionWindow(self.newWindow, self)
-		elif op == "new":
-			self.app = NewSubscriptionWindow(self.newWindow, self)
-		elif op == "delete":
-			self.app = DeleteSubscriptionWindow(self.newWindow, self)
+		self.app = GetSubscriptionWindow(self.newWindow, self)
+		
+	def new_Subscription(self):
+		self.newWindow = tk.Toplevel(self.master)
+		self.app = NewSubscriptionWindow(self.newWindow, self)
+		
+	def delete_Subscription(self):
+		self.newWindow = tk.Toplevel(self.master)
+		self.app = DeleteSubscriptionWindow(self.newWindow, self)
 
 class NewSubscriptionWindow:
 	def __init__(self, master, controller):
@@ -466,6 +469,58 @@ class NewSubscriptionWindow:
 
 	def close_window(self):
 		self.master.destroy()
+		
+class DeleteSubscriptionWindow:
+	def __init__(self, master, controller):
+		self.master = master
+		self.topframe = tk.Frame(self.master)
+		self.bottomframe = tk.Frame(self.master)
+		self.controller = controller
+
+		self.L_ServerIP = Label(self.topframe, text="Server IP: ").grid(row=0, column=0, sticky=W)
+		self.E_ServerIP = Entry(self.topframe)
+		self.E_ServerIP.insert(END, "127.0.0.1")
+		self.E_ServerIP.grid(row=0, column=1, sticky=E)
+
+		self.L_UserName = Label(self.topframe, text="User Name: ").grid(row=1, column=0, sticky=W)
+		self.E_UserName = Entry(self.topframe)
+		self.E_UserName.insert(END, "admin")
+		self.E_UserName.grid(row=1, column=1, sticky=E)
+
+		self.L_Password = Label(self.topframe, text="Password: ").grid(row=2, column=0, sticky=W)
+		self.E_Password = Entry(self.topframe, show="*")
+		self.E_Password.insert(END, "admin")
+		self.E_Password.grid(row=2, column=1, sticky=E)
+		
+		self.L_SubID = Label(self.topframe, text="Subscription ID: ").grid(row=3, column=0, sticky=W)
+		self.E_SubID = Entry(self.topframe)
+		self.E_SubID.grid(row=3, column=1, sticky=E)
+	
+		self.sendButton = tk.Button(self.bottomframe, text = 'Send', width = 10, command = self.send_request)
+		self.sendButton.grid(row=0,column=0)
+		self.quitButton = tk.Button(self.bottomframe, text = 'Cancel', width = 10, command = self.close_window)
+		self.quitButton.grid(row=0,column=1)
+		
+		self.topframe.grid(row=0)
+		self.bottomframe.grid(row=1)
+	
+		def send_request(self):
+			self.host = self.E_ServerIP.get()
+			self.user = self.E_UserName.get()
+			self.password = self.E_Password.get()
+			self.subID = self.E_SubID.get()
+	
+			self.session = manager.connect(host=self.host, port=2830, username=self.user, 
+				password=self.password, device_params={'name':'opendaylight'}, hostkey_verify=False, look_for_keys=False, allow_agent=False)
+			
+		if self.subID == "":
+			print("Missing subscription-ID!")
+			return
+		else:
+			self.rpc_reply = self.session.delete_subscription(self.subID)
+
+		self.close_window()	
+		
 
 class GetSubscriptionWindow:
 	def __init__(self, master, controller):
@@ -518,9 +573,7 @@ class GetSubscriptionWindow:
 			singlenode = False
 		else:
 			self.rpc_reply = self.session.get(filter=("subtree", filterxmlID))
-			singlenode = True
-			
-		print(self.rpc_reply)	
+			singlenode = True	
 		
 		self.controller.add_subscription(singlenode, self.rpc_reply, self.host, self.session)
 
