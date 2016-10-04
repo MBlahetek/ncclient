@@ -56,6 +56,8 @@ class NotificationType(object):
     YANG_PUSH_UPDATE = 11
     YANG_PUSH_CHANGE_UPDATE = 12
 
+
+
     @staticmethod
     def str_to_type(string):
         lookup = {"netconf-config-change": NotificationType.NETCONF_CONFIG_CHANGE,
@@ -69,7 +71,8 @@ class NotificationType(object):
         "subscription-suspended": NotificationType.SUBSCRIPTION_SUSPENDED,
         "subscription-resumed" : NotificationType.SUBSCRIPTION_RESUMED,
         "push-update": NotificationType.YANG_PUSH_UPDATE,
-        "push-change-update": NotificationType.YANG_PUSH_CHANGE_UPDATE}
+        "push-change-update": NotificationType.YANG_PUSH_CHANGE_UPDATE
+}
         try: return lookup[string]
         except: raise Exception("Unknown notification type")
 
@@ -82,6 +85,7 @@ class YangPushNotification(object):
         self._parsed = False
         self._root = None
         self._eventTime = None
+        self._typeStr = None
         self._type = None
         self._data = None
         self._connected = True
@@ -108,7 +112,10 @@ class YangPushNotification(object):
             reason = data.find(qualify("termination-reason", YANGPUSH_NOTIFICATION_NS))
 
             self._eventTime = parse(eventTime.text)
-            self._type = NotificationType.str_to_type(re.sub("{.*}", "", data.tag))
+            self._typeStr = re.sub("{.*}", "", data.tag)
+            self._type = NotificationType.str_to_type(self._typeStr)
+
+            
             self._data = data
 
             # This might be unnecessary if callback is never invoked
@@ -135,6 +142,12 @@ class YangPushNotification(object):
         if not self._parsed:
             self.parse()
         return self._type
+    
+    @property
+    def typeStr(self):
+        if not self._parsed:
+            self.parse()
+        return self._typeStr
 
     @property
     def data_ele(self):
@@ -195,9 +208,8 @@ class EstablishSubscription(RPC):
 
     def request(self, callback, errback, manager=None, retries=20, delay=1,
         encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
-        sub_start_time=None, sub_stop_time=None, 
-        dscp=None, priority=None, dependency=None, update_trigger=None, period=None, 
-        no_sync_on_start=None, excluded_change=None):
+        sub_start_time=None, sub_stop_time=None, priority=None, dependency=None, 
+        update_trigger=None, period=None, no_synch_on_start=None, excluded_change=None):
 
         """Establish a subscription to NETCONF server
 
@@ -236,11 +248,6 @@ class EstablishSubscription(RPC):
 
         *sub_stop_time* Specifies the time user wants to stop receiving notifications
 
-        *dscp* The push update’s IP packet transport priority.
-        This is made visible across network hops to receiver.
-        The transport priority is shared for all receivers of
-        a given subscription.
-
         *priority* Relative priority for a subscription. Allows an underlying
         transport layer perform informed load balance allocations
         between various subscriptions.
@@ -258,9 +265,9 @@ class EstablishSubscription(RPC):
         Notification the dampening period. The dampening period is minimum amount 
         of time that needs to have passed since the last time an update was
 
-        *no_sync_on_start* (on change only) Specifies wether a complete synchronisation 
+        *no_synch_on_start* (on change only) Specifies wether a complete synchronisation 
         at the beginning of a new on change subscription is wanted or not. Just on change
-        notifications will be sent if no_sync_on_start is set. (by default false)
+        notifications will be sent if no_synch_on_start is set. (by default false)
 
         *excluded_change* (on change only) Use to restrict which changes trigger an update.
         For example, if modify is excluded, only creation and deletion of objects 
@@ -281,7 +288,7 @@ class EstablishSubscription(RPC):
 
         # check if on change parameters are set for periodic subscription
 
-        if (no_sync_on_start or excluded_change is not None) and update_trigger != "on-change":
+        if (no_synch_on_start or excluded_change is not None) and update_trigger != "on-change":
             raise ValueError("Can not set on change update parameters for periodic updates")
 
 
@@ -314,11 +321,6 @@ class EstablishSubscription(RPC):
         if sub_stop_time is not None:
             subscription_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time, YANGPUSH_NOTIFICATION_NS))
 
-        if dscp is not None:
-            dscpTag = etree.Element("dscp", xmlns=YANGPUSH_NOTIFICATION_NS)
-            dscpTag.text = priority
-            subscription_node.append(dscpTag)
-
         if priority is not None:
             priorityTag = etree.Element("subscription-priority", xmlns=YANGPUSH_NOTIFICATION_NS)
             priorityTag.text = priority
@@ -340,10 +342,10 @@ class EstablishSubscription(RPC):
             subscription_node.append(periodTag)
 
             
-            if no_sync_on_start is not None:
-                no_sync_on_startTag = etree.Element("no-sync-on-start", xmlns=YANGPUSH_NOTIFICATION_NS)
+            if no_synch_on_start is not None:
+                no_synch_on_startTag = etree.Element("no-synch-on-start", xmlns=YANGPUSH_NOTIFICATION_NS)
                 # a flag element, no text needed.
-                subscription_node.append(no_sync_on_startTag)
+                subscription_node.append(no_synch_on_startTag)
 
             if excluded_change is not None:
                 excluded_changeTag = etree.Element("excluded-change", xmlns=YANGPUSH_NOTIFICATION_NS)
@@ -356,9 +358,9 @@ class EstablishSubscription(RPC):
         self.session.add_listener(YangPushNotificationListener(callback, errback, 
             manager=manager, retries=retries, delay=delay, 
             encoding=encoding, stream=stream, update_filter=update_filter, 
-            start_time=start_time, stop_time=stop_time, dscp=dscp, priority=priority,
+            start_time=start_time, stop_time=stop_time, priority=priority,
             dependency=dependency, update_trigger=update_trigger, period=period,
-            no_sync_on_start=no_sync_on_start, excluded_change=excluded_change))
+            no_synch_on_start=no_synch_on_start, excluded_change=excluded_change))
         
         logger.debug('YangPushNotificationListener added')
         # send the RPC
@@ -385,17 +387,17 @@ class YangPushNotificationListener(SessionListener):
 
     def __init__(self, user_callback, user_errback, manager, retries, delay,
         encoding, stream, update_filter, start_time, stop_time,
-        dscp, priority, dependency, update_trigger, period,
-        no_sync_on_start, excluded_change):
+        priority, dependency, update_trigger, period,
+        no_synch_on_start, excluded_change):
         """Called by EstablishSubscription when a new YangPushNotificationListener is added to a session.
         used to keep track of connection and subscription info in case connection gets dropped."""
         self.user_callback = user_callback
         self.user_errback = user_errback
         self.manager, self.retries, self.delay = manager, retries, delay
         self.encoding, self.stream, self.update_filter = encoding, stream, update_filter
-        self.dscp, self.priority, self.dependency = dscp, priority, dependency
+        self.priority, self.dependency = priority, dependency
         self.update_trigger, self.period = update_trigger, period
-        self.no_sync_on_start, self.excluded_change = no_sync_on_start, excluded_change
+        self.no_synch_on_start, self.excluded_change = no_synch_on_start, excluded_change
         self.reconnect_time, self.stop_time = start_time, stop_time
 
     def callback(self, root, raw):
@@ -438,7 +440,7 @@ class YangPushNotificationListener(SessionListener):
                         encoding=self.encoding, stream=self.stream, update_filter=self.update_filter, 
                         start_time=self.reconnect_time, stop_time=self.stop_time, dscp=self.dscp, 
                         priority=self.priority, dependency=self.dependency, update_trigger=self.update_trigger,
-                        period=self.period, no_sync_on_start=self.no_sync_on_start, excluded_change= self.excluded_change)
+                        period=self.period, no_synch_on_start=self.no_synch_on_start, excluded_change= self.excluded_change)
                     disconnected = False
                 except Exception as e:
                     self.user_errback(ReconnectError("Failed to reconnect, trying again"))
@@ -447,3 +449,4 @@ class YangPushNotificationListener(SessionListener):
             if retries == 0:
                 self.user_errback(ReconnectError("Connection refused after %d attempts, giving up" % self.retries))
         """
+        
