@@ -524,6 +524,7 @@ class DeleteSubscriptionWindow:
 			return
 		else:
 			self.rpc_reply = self.session.delete_subscription(self.subID)
+			self.controller.tree.delete(self.subID)
 	
 		self.close_window()
 		
