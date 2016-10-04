@@ -23,13 +23,11 @@ class MainApplication:
 		self.tree = ttk.Treeview(self.mainframe, height=20)
 		self.tree['show'] = 'headings'
 
-		self.tree["columns"]=("Server","Subscription ID", "Configured Subscription", 
-			"Status", "Stream", "Filter", "Replay start time", "Replay stop time",
-			"Encoding", "Start time", "Stop time", "Update-trigger", "Period", "DSCP", "Priority",
-			"Dependency")
+		self.tree["columns"]=("Server","Subscription ID", "Status", "Stream", "Filter", 
+							"Replay start time", "Replay stop time", "Encoding", "Start time", 
+							"Stop time", "Update-trigger", "Period", "Priority", "Dependency")
 		self.tree.column("Server", width=150, minwidth=150)
 		self.tree.column("Subscription ID", width=160, minwidth=150)
-		self.tree.column("Configured Subscription", width=170, minwidth=150)
 		self.tree.column("Status", width=140, minwidth=140)
 		self.tree.column("Stream", width=140, minwidth=140)
 		self.tree.column("Filter", width=140, minwidth=130)
@@ -40,13 +38,11 @@ class MainApplication:
 		self.tree.column("Stop time", width=140, minwidth=130)
 		self.tree.column("Update-trigger", width=150, minwidth=130)
 		self.tree.column("Period", width=150, minwidth=130)
-		self.tree.column("DSCP", width=110, minwidth=100)
 		self.tree.column("Priority", width=110, minwidth=100)
 		self.tree.column("Dependency", width=130, minwidth=120)
 
 		self.tree.heading("Server", text="Server")
 		self.tree.heading("Subscription ID", text="Subscription ID")
-		self.tree.heading("Configured Subscription", text="Configured Subscription")
 		self.tree.heading("Status", text="Status")
 		self.tree.heading("Stream", text="Stream")
 		self.tree.heading("Filter", text="Filter")
@@ -57,7 +53,6 @@ class MainApplication:
 		self.tree.heading("Stop time", text="Stop time")
 		self.tree.heading("Update-trigger", text="Update-trigger")
 		self.tree.heading("Period", text="Period")
-		self.tree.heading("DSCP", text="DSCP")
 		self.tree.heading("Priority", text="Priority")
 		self.tree.heading("Dependency", text="Dependency")
 
@@ -115,7 +110,6 @@ class MainApplication:
 
 	def parse_to_treeview(self, xml, server, session):	
 		existing = False
-		configSub = ""
 		filter = ""
 		for child in xml:
 			if child.tag[-len("subscription-id"):] == "subscription-id":
@@ -128,8 +122,6 @@ class MainApplication:
 				subStopTime = child.text
 				if subStopTime is None:
 					subStopTime = "not set"
-			if child.tag[-len("dscp"):] == "dscp":
-				dscp = child.text
 			if child.tag[-len("subscription-priority"):] == "subscription-priority":
 				priority = child.text
 			if child.tag[-len("subscription-dependency"):] == "subscription-dependency":
@@ -155,7 +147,6 @@ class MainApplication:
 				
 		if existing:
 			self.tree.set(subID, column="Server", value=server)
-			self.tree.set(subID, column="Configured Subscription", value=configSub)
 			self.tree.set(subID, column="Status", value="waiting for first Notification")
 			self.tree.set(subID, column="Stream", value=stream)
 			self.tree.set(subID, column="Filter", value=filter)
@@ -166,14 +157,12 @@ class MainApplication:
 			self.tree.set(subID, column="Stop time", value=subStopTime)
 			self.tree.set(subID, column="Update-trigger", value=updateTrigger)
 			self.tree.set(subID, column="Period", value=period)
-			self.tree.set(subID, column="DSCP", value=dscp)
 			self.tree.set(subID, column="Priority", value=priority)
 			self.tree.set(subID, column="Dependency", value=dependency)
 		else:		
 			self.tree.insert(parent="", index="end", iid=subID, 
 				values=(server, 
-					subID, 
-					configSub, 
+					subID,  
 					"waiting for first Notification", 
 					stream, 
 					filter, 
@@ -183,8 +172,7 @@ class MainApplication:
 					subStartTime, 
 					subStopTime, 
 					updateTrigger, 
-					period, 
-					dscp, 
+					period,  
 					priority, 
 					dependency))
 		
@@ -229,77 +217,78 @@ class NewSubscriptionWindow:
 		self.topframe = tk.Frame(self.master)
 		self.bottomframe = tk.Frame(self.master)
 		self.controller = controller
+		width=25
 
 		self.L_ServerIP = Label(self.topframe, text="Server IP: ").grid(row=0, column=0, sticky=W)
-		self.E_ServerIP = Entry(self.topframe)
+		self.E_ServerIP = Entry(self.topframe, width=width)
 		self.E_ServerIP.insert(END, "127.0.0.1")
 		self.E_ServerIP.grid(row=0, column=1, sticky=E)
 
 		self.L_UserName = Label(self.topframe, text="User Name: ").grid(row=1, column=0, sticky=W)
-		self.E_UserName = Entry(self.topframe)
+		self.E_UserName = Entry(self.topframe, width=width)
 		self.E_UserName.insert(END, "admin")
 		self.E_UserName.grid(row=1, column=1, sticky=E)
 
 		self.L_Password = Label(self.topframe, text="Password: ").grid(row=2, column=0, sticky=W)
-		self.E_Password = Entry(self.topframe, show="*")
+		self.E_Password = Entry(self.topframe, show="*", width=width)
 		self.E_Password.insert(END, "admin")
 		self.E_Password.grid(row=2, column=1, sticky=E)
 
 		self.encodings = ("XML", "JSON")
 		self.L_Encoding = Label(self.topframe, text="encoding: ").grid(row=3, sticky=W)
-		self.SB_Encoding = Spinbox(self.topframe, values=self.encodings, wrap=True, state='readonly')
+		self.SB_Encoding = Spinbox(self.topframe, values=self.encodings, wrap=True, state='readonly', width=width-2)
 		self.SB_Encoding.grid(row=3, column=1, sticky=E)
 
 		self.streams = ("None", "YANG-PUSH", "OPERATIONAL", "CONFIGURATION")
 		self.L_Stream = Label(self.topframe, text="stream: ").grid(row=4, sticky=W)
-		self.SB_Stream = Spinbox(self.topframe, values=self.streams, wrap=True, state='readonly')
+		self.SB_Stream = Spinbox(self.topframe, values=self.streams, wrap=True, state='readonly', width=width-2)
 		self.SB_Stream.grid(row=4, column=1, sticky=E)
 
 		self.L_StartTime = Label(self.topframe, text="startTime: ").grid(row=5, sticky=W)
 		self.L_TimeFormat1 = Label(self.topframe, text="(YYYY/MM/DD HH:MM:SS.ffffff)").grid(row=6, sticky=W)
-		self.E_StartTime = Entry(self.topframe, state='disabled')
+		self.E_StartTime = Entry(self.topframe, state='disabled', width=width)
 		self.E_StartTime.grid(row=5, column=1, sticky=E)
 
 		self.L_StopTime = Label(self.topframe, text="stopTime: ").grid(row=7, sticky=W)
 		self.L_TimeFormat2 = Label(self.topframe, text="(YYYY/MM/DD HH:MM:SS.ffffff)").grid(row=8, sticky=W)
-		self.E_StopTime = Entry(self.topframe, state='disabled')
+		self.E_StopTime = Entry(self.topframe, state='disabled', width=width)
 		self.E_StopTime.grid(row=7, column=1, sticky=E)
 
 		self.L_UpdateFilter = Label(self.topframe, text="update-filter: ").grid(row=9, sticky=W)
 		self.updateFilters = ("None", "subtree")
-		self.SB_UpdateFilter = Spinbox(self.topframe, values=self.updateFilters, wrap=True, state='readonly')
+		self.SB_UpdateFilter = Spinbox(self.topframe, values=self.updateFilters, wrap=True, state='readonly', width=width-2)
 		self.SB_UpdateFilter.grid(row=9, column=1, sticky=E)
-		self.L_Criteria = Label(self.topframe, text="    criteria: ").grid(row=10, sticky=W)
-		self.E_Criteria = Entry(self.topframe)
-		self.E_Criteria.grid(row=10, column=1, sticky=E)
+		self.L_Criteria = Label(self.topframe, text="    criteria: ").grid(row=10, sticky=NW)
+		self.T_Criteria = Text(self.topframe, height=8, width=width)
+		self.T_Criteria.grid(row=10, column=1, sticky=E)
 
 		self.L_SubStartTime = Label(self.topframe, text="subscription-start-time: ").grid(row=11, sticky=W)
 		self.L_TimeFormat3 = Label(self.topframe, text="(YYYY/MM/DD HH:MM:SS.ffffff)").grid(row=12, sticky=W)
-		self.E_SubStartTime = Entry(self.topframe)
+		self.E_SubStartTime = Entry(self.topframe, width=width)
 		self.E_SubStartTime.grid(row=11, column=1, sticky=E)
 
 		self.L_SubStopTime = Label(self.topframe, text="subscription-stop-time: ").grid(row=13, sticky=W)
 		self.L_TimeFormat4 = Label(self.topframe, text="(YYYY/MM/DD HH:MM:SS.ffffff)").grid(row=14, sticky=W)
-		self.E_SubStopTime = Entry(self.topframe)
+		self.E_SubStopTime = Entry(self.topframe, width=width)
 		self.E_SubStopTime.grid(row=13, column=1, sticky=E)
 
 		self.L_SubPriority = Label(self.topframe, text="subscription-priority: ").grid(row=15, sticky=W)
-		self.E_SubPriority = Entry(self.topframe, state='disabled')
+		self.E_SubPriority = Entry(self.topframe, state='disabled', width=width)
 		self.E_SubPriority.grid(row=15, column=1, sticky=E)
 
 		self.L_SubDependency = Label(self.topframe, text="subscription-dependency: ").grid(row=16, sticky=W)
-		self.E_SubDependency = Entry(self.topframe, state='disabled')
+		self.E_SubDependency = Entry(self.topframe, state='disabled', width=width)
 		self.E_SubDependency.grid(row=16, column=1, sticky=E)
 
 		self.L_UpdateTrigger = Label(self.topframe, text="update-trigger: ").grid(row=17, sticky=W)
 		self.updateTriggers = ("periodic", "on-change")
 		self.updateVar = StringVar()
-		self.SB_UpdateTrigger = Spinbox(self.topframe, values=self.updateTriggers, wrap=True, state='readonly', textvariable=self.updateVar)
+		self.SB_UpdateTrigger = Spinbox(self.topframe, values=self.updateTriggers, wrap=True, state='readonly', textvariable=self.updateVar, width=width-2)
 		self.SB_UpdateTrigger.grid(row=17, column=1, sticky=E)
 		self.updateVar.trace("w", self.updateTriggerChange)
 		
 		self.L_Period = Label(self.topframe, text="    period (ms): ").grid(row=18, sticky=W)
-		self.E_Period = Entry(self.topframe)
+		self.E_Period = Entry(self.topframe, width=width)
 		self.E_Period.insert(END, "5000")
 		self.E_Period.grid(row=18, column=1, sticky=E)
 
@@ -309,7 +298,7 @@ class NewSubscriptionWindow:
 		self.CB_NoSyncOnStart.grid(row=19, column=1)
 
 		self.L_DampeningPeriod = Label(self.topframe, text="    dampening-period (ms): ").grid(row=20, sticky=W)
-		self.E_DampeningPeriod = Entry(self.topframe, state='disabled')
+		self.E_DampeningPeriod = Entry(self.topframe, state='disabled', width=width)
 		self.E_DampeningPeriod.grid(row=20, column=1, sticky=E)
 
 		self.L_ExcludedChange = Label(self.topframe, text="    excluded-change: ").grid(row=21, sticky=W)
@@ -360,7 +349,7 @@ class NewSubscriptionWindow:
 			self.stopTime = None
 
 		self.updateFilter = self.SB_UpdateFilter.get()
-		self.updateCriteria = self.E_Criteria.get()
+		self.updateCriteria = self.T_Criteria.get('1.0', 'end')
 
 		if self.updateFilter != "None" and self.updateCriteria == "":
 			self.updateCriteria = None
