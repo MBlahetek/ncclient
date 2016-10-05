@@ -12,13 +12,12 @@ import xml.etree.ElementTree as ET
 class MainApplication:
 	def __init__(self, master):
 		self.master = master
+		self.sessions = []
 
 		self.calc_window_size(self.master)
 
 		self.mainframe = tk.Frame(self.master)
 		self.buttonframe = tk.Frame(self.master)
-		
-		#self.counter = 1
 		
 		self.tree = ttk.Treeview(self.mainframe, height=20)
 		self.tree['show'] = 'headings'
@@ -70,11 +69,8 @@ class MainApplication:
 
 	def callback(self, notification):
 		print("callback called")
-		print("print notification:")
 		print(notification)
-		print("print notification.data_xml:")
-		print(notification.data_xml)
-		
+	
 		subID = ET.fromstring(notification.data_xml)[0].text
 		status = notification.typeStr
 		print(subID)
@@ -83,9 +79,8 @@ class MainApplication:
 		
 				
 	def errback(self, ex):
-		print("errback called. msg:")
+		print("errback called.")
 		print(ex)
-		print("errback called. msg end")
 
 	def add_new_subscription(self, subID, server, session):
 			
@@ -179,13 +174,11 @@ class MainApplication:
 		
 
 	def update_Subscription(self, subID, status):
-		#if self.counter == 0:
 		if self.tree.exists(subID):		
 			self.tree.set(subID, column="Status", value=status)
 		else:
 			return
-		#else:
-		#	self.counter -= 1
+
 
 	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
@@ -420,8 +413,10 @@ class NewSubscriptionWindow:
 			if self.excludeStr == "":
 				self.excludeStr = None
 				
+		#if (self.host, session) in self.controller.sessions:
+		#	print (True)
 
-		self.session = manager.connect(
+		session = manager.connect(
 			host=self.host, port=2830, 
 			username=self.user, 
 			password=self.password, 
@@ -430,10 +425,10 @@ class NewSubscriptionWindow:
 			look_for_keys=False, 
 			allow_agent=False)
 
-		self.rpc_reply = self.session.establish_subscription(
+		rpc_reply = session.establish_subscription(
 			callback=self.controller.callback, 
 			errback=self.controller.errback, 
-			manager=self.session, 
+			manager=session, 
 			encoding=self.encoding, 
 			stream=self.stream, 
 			start_time=self.startTime, 
@@ -448,14 +443,14 @@ class NewSubscriptionWindow:
 			no_synch_on_start=self.noSynchOnStart, 
 			excluded_change=self.excludeStr)
 		
-		xmlroot = ET.fromstring(self.rpc_reply.xml)	
+		xmlroot = ET.fromstring(rpc_reply.xml)	
 		
 		for child in xmlroot:
 			if child.tag[-len("subscription-id"):] == "subscription-id":
 				self.subID = child.text
 		
-		if self.rpc_reply.ok:
-			self.controller.add_new_subscription(self.subID, self.host, self.session)
+		if rpc_reply.ok:
+			self.controller.add_new_subscription(self.subID, self.host, session)
 			self.close_window()
 
 	def updateTriggerChange(self, a, b, c):
