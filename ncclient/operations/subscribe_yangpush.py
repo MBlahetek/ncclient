@@ -16,7 +16,6 @@ import sys, os, warnings
 import re
 import ncclient.manager
 import time
-import logging
 
 warnings.simplefilter("ignore", DeprecationWarning)
 
@@ -27,14 +26,6 @@ from lxml import etree
 from datetime import datetime, timedelta
 from dateutil.parser import parse
 
-logger = logging.getLogger('ncclient.transport.session')
-logger.setLevel(logging.DEBUG)
-
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 NETCONF_NOTIFICATION_NS = "urn:ietf:params:xml:ns:netconf:notification:1.0"
 YANGPUSH_NOTIFICATION_NS = "urn:ietf:params:xml:ns:yang:ietf-yang-push"
@@ -351,8 +342,7 @@ class EstablishSubscription(RPC):
                 excluded_changeTag = etree.Element("excluded-change", xmlns=YANGPUSH_NOTIFICATION_NS)
                 excluded_changeTag.text = excluded_change
                 subscription_node.append(excluded_changeTag)
-                
-        logger.debug('XML-string for establish-subscription RPC build')
+            
         # add NotificationListener to retrieve the notifications
 
         self.session.add_listener(YangPushNotificationListener(callback, errback, 
@@ -362,7 +352,6 @@ class EstablishSubscription(RPC):
             dependency=dependency, update_trigger=update_trigger, period=period,
             no_synch_on_start=no_synch_on_start, excluded_change=excluded_change))
         
-        logger.debug('YangPushNotificationListener added')
         # send the RPC
         return self._request(subscription_node)
 
