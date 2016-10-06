@@ -400,14 +400,7 @@ class YangPushNotificationListener(SessionListener):
             self.user_errback(NotificationError("Received a message not of type notification"))
             return
         notification = YangPushNotification(raw)
-        self.reconnect_time = notification.eventTime.replace(tzinfo=None) + timedelta.resolution
-
-        # This might be unnecessary if callback is never invoked
-        # when connection drops
-        if notification.connected:
-            self.user_callback(notification)
-        else:
-            self.user_errback(notification)
+        self.user_callback(notification)
 
     def errback(self, ex):
         """Called when an error occurs."""

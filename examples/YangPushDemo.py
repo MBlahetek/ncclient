@@ -4,6 +4,7 @@ from ncclient.operations.subscribe_yangpush import *
 from datetime import datetime
 import sys, os, warnings
 import Tkinter as tk
+import time
 import ttk
 import tkFont
 import xml.etree.ElementTree as ET
@@ -77,20 +78,60 @@ class MainApplication:
 		print("errback called.")
 		print(ex)
 
-	def add_new_subscription(self, subID, server, session):
-			
-		FILTER_SNIPPET = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"><subscription><subscription-id>%s</subscription-id></subscription></subscriptions>""" % subID
-
-		rpc_reply = session.get(filter=("subtree", FILTER_SNIPPET))
+	def add_to_treeview(self, subID, server, stream, encoding, updateTrigger, period, filter=None, startTime=None, stopTime=None, subStartTime=None, subStopTime=None, priority=None, dependency=None):
 		
-		root = ET.fromstring(rpc_reply.xml)
-		subxml = root[0][0][0]
-		self.parse_to_treeview(subxml, server, session)
-	
+		if filter is None:
+			filter = "/*"
+		#else:
+			#Parse subtree to xpath view
+			
+		if startTime is None:
+			startTime = "not set"
+		else:
+			startTime = startTime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')	
+			
+		if stopTime is None:
+			stopTime = "not set"
+		else:
+			stopTime = stopTime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+				
+		if subStartTime is None:
+			timestr = datetime.now()
+			subStartTime = timestr.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+		else:
+			subStartTime = subStartTime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+			
+		if subStopTime is None:
+			subStopTime = "not set"
+		else:
+			subStopTime = subStopTime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+			
+		if priority is None:
+			priority = "not set"
+			
+		if dependency is None:
+			dependency = "not set"
+			
+		self.tree.insert(parent="", index="end", iid=subID, 
+						values=(
+							server, 
+							subID, 
+							"waiting for first Notification", 
+							stream, 
+							filter, 
+							startTime, 
+							stopTime, 
+							encoding, 
+							subStartTime, 
+							subStopTime, 
+							updateTrigger, 
+							period, 
+							priority, 
+							dependency))
+
 	def add_subscription(self, singlenode, rpc_reply, server, session):
 		
 		root = ET.fromstring(rpc_reply.xml)
-		
 		if singlenode:
 			subxml = root[0][0][0]
 			self.parse_to_treeview(subxml, server, session)
@@ -271,7 +312,7 @@ class NewSubscriptionWindow:
 		self.SB_Encoding = Spinbox(self.topframe, values=self.encodings, wrap=True, state='readonly', width=width-2)
 		self.SB_Encoding.grid(row=3, column=1, sticky=E)
 
-		self.streams = ("None", "YANG-PUSH", "OPERATIONAL", "CONFIGURATION")
+		self.streams = ("YANG-PUSH", "OPERATIONAL", "CONFIGURATION")
 		self.L_Stream = Label(self.topframe, text="stream: ").grid(row=4, sticky=W)
 		self.SB_Stream = Spinbox(self.topframe, values=self.streams, wrap=True, state='readonly', width=width-2)
 		self.SB_Stream.grid(row=4, column=1, sticky=E)
@@ -476,7 +517,20 @@ class NewSubscriptionWindow:
 				self.subID = child.text
 		
 		if self.rpc_reply.ok:
-			self.controller.add_new_subscription(self.subID, self.host, self.session[0])
+			self.controller.add_to_treeview(
+				subID=self.subID, 
+				server=self.host, 
+				stream=self.stream, 
+				encoding=self.encoding, 
+				updateTrigger=self.updateTrigger, 
+				period=self.period, 
+				filter=self.updateCriteria, 
+				startTime=self.startTime, 
+				stopTime=self.stopTime, 
+				subStartTime=self.subStartTime, 
+				subStopTime=self.subStopTime, 
+				priority=self.subPriority, 
+				dependency=self.subDependency)
 			self.close_window()
 
 	def updateTriggerChange(self, a, b, c):
