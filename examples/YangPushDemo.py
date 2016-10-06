@@ -197,7 +197,7 @@ class MainApplication:
 				allow_agent=False)
 			self.sessions.append((server, session))
 			
-		return session
+		return (session, sessionUp)
 
 	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
@@ -434,9 +434,10 @@ class NewSubscriptionWindow:
 				
 		self.session = self.controller.get_Session(self.host, self.user, self.password)
 
-		self.rpc_reply = self.session.establish_subscription(
+		self.rpc_reply = self.session[0].establish_subscription(
 			callback=self.controller.callback, 
 			errback=self.controller.errback,
+			notifListening=self.session[1],
 			encoding=self.encoding, 
 			stream=self.stream, 
 			start_time=self.startTime, 
@@ -458,7 +459,7 @@ class NewSubscriptionWindow:
 				self.subID = child.text
 		
 		if self.rpc_reply.ok:
-			self.controller.add_new_subscription(self.subID, self.host, self.session)
+			self.controller.add_new_subscription(self.subID, self.host, self.session[0])
 			self.close_window()
 
 	def updateTriggerChange(self, a, b, c):
@@ -522,15 +523,13 @@ class DeleteSubscriptionWindow:
 		self.password = self.E_Password.get()
 		self.subID = self.E_SubID.get()
 	
-		self.session = manager.connect(host=self.host, port=2830, username=self.user,
-									password=self.password, device_params={'name':'opendaylight'}, 
-									hostkey_verify=False, look_for_keys=False, allow_agent=False)
+		self.session = self.controller.get_Session(self.host, self.user, self.password)
 			
 		if self.subID == "":
 			print("Missing subscription-ID!")
 			return
 		else:
-			self.rpc_reply = self.session.delete_subscription(self.subID)
+			self.rpc_reply = self.session[0].delete_subscription(self.subID)
 			self.controller.tree.delete(self.subID)
 	
 		self.close_window()
@@ -587,13 +586,21 @@ class GetSubscriptionWindow:
 		FILTERXMLID = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"><subscription><subscription-id>%s</subscription-id></subscription></subscriptions>""" % self.subID
 
 		if self.subID == "":
-			self.rpc_reply = self.session.get_subscription(callback=self.controller.callback, errback=self.controller.errback,filter=("subtree", FILTERXML))
+			self.rpc_reply = self.session[0].get_subscription(
+				callback=self.controller.callback, 
+				errback=self.controller.errback, 
+				notifListening=self.session[1], 
+				filter=("subtree", FILTERXML))
 			singlenode = False
 		else:
-			self.rpc_reply = self.session.get_subscription(callback=self.controller.callback, errback=self.controller.errback, filter=("subtree", FILTERXMLID))
+			self.rpc_reply = self.session[0].get_subscription(
+				callback=self.controller.callback, 
+				errback=self.controller.errback, 
+				notifListening=self.session[1], 
+				filter=("subtree", FILTERXMLID))
 			singlenode = True	
 		
-		self.controller.add_subscription(singlenode, self.rpc_reply, self.host, self.session)
+		self.controller.add_subscription(singlenode, self.rpc_reply, self.host, self.session[0])
 
 		self.close_window()
 

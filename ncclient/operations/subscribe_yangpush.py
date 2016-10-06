@@ -197,7 +197,7 @@ class EstablishSubscription(RPC):
                
         return filter_ele
 
-    def request(self, callback, errback,
+    def request(self, callback, errback, notifListening=False,
         encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
         sub_start_time=None, sub_stop_time=None, priority=None, dependency=None, 
         update_trigger=None, period=None, no_synch_on_start=None, excluded_change=None):
@@ -207,6 +207,10 @@ class EstablishSubscription(RPC):
         *callback* User-defined callback function to be invoked when a notification arrives
 
         *errback* User-defined function to e invoked when an error occurs
+        
+        *notifListening* If there's already a active session with an existing
+        YangPushNotificationListener, this boolean prevents having multiple listeners
+        for the same Task.
 
         *encoding* Distinguish between the proper encoding that was specified
         for the subscription (by default XML)
@@ -333,8 +337,15 @@ class EstablishSubscription(RPC):
                 subscription_node.append(excluded_changeTag)
             
         # add NotificationListener to retrieve the notifications
-
-        self.session.add_listener(YangPushNotificationListener(callback, errback))
+        if notifListening is False:
+            self.session.add_listener(YangPushNotificationListener(callback, errback))
+            print("88888888888888888888888888888888888888888888888888888888888")
+            print("Listener added!")
+            print("88888888888888888888888888888888888888888888888888888888888")
+        else:
+            print("11111111111111111111111111111111111111111111111111111111111")
+            print("No Listener added!")
+            print("11111111111111111111111111111111111111111111111111111111111")
         
         # send the RPC
         return self._request(subscription_node)
@@ -353,7 +364,7 @@ class DeleteSubscription(RPC):
 
 class GetSubscription(RPC):
 
-    def request(self, callback, errback, filter=None):
+    def request(self, callback, errback, notifListening=False, filter=None):
         """Retrieve running configuration and device state information.
 
         *filter* specifies the portion of the configuration to retrieve (by default entire configuration is retrieved)
@@ -363,7 +374,15 @@ class GetSubscription(RPC):
         node = new_ele("get")
         if filter is not None:
             node.append(util.build_filter(filter))
-        self.session.add_listener(YangPushNotificationListener(callback, errback))
+        if notifListening is False:
+            self.session.add_listener(YangPushNotificationListener(callback, errback))
+            print("88888888888888888888888888888888888888888888888888888888888")
+            print("Listener added!")
+            print("88888888888888888888888888888888888888888888888888888888888")
+        else:
+            print("11111111111111111111111111111111111111111111111111111111111")
+            print("No Listener added!")
+            print("11111111111111111111111111111111111111111111111111111111111")
         return self._request(node)
 
     
