@@ -111,7 +111,7 @@ class MainApplication:
 				subStartTime = child.text
 			if child.tag[-len("subscription-stop-time"):] == "subscription-stop-time":
 				subStopTime = child.text
-				if subStopTime is None:
+				if subStopTime == "-1":
 					subStopTime = "not set"
 			if child.tag[-len("subscription-priority"):] == "subscription-priority":
 				priority = child.text
@@ -203,7 +203,6 @@ class MainApplication:
 				sessionUp = True
 			
 		if sessionUp is False:
-			print("no such session!")
 			session = manager.connect(
 				host=server, port=2830, 
 				username=user, 
@@ -404,6 +403,7 @@ class NewSubscriptionWindow:
 
 		if self.E_SubStartTime.get() != "":
 			self.subStartTime = datetime.strptime(self.E_SubStartTime.get(), '%Y/%m/%d %H:%M:%S.%f')
+			print(self.subStartTime)
 		else:
 			self.subStartTime = None
 

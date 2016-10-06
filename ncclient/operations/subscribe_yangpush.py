@@ -176,11 +176,15 @@ class EstablishSubscription(RPC):
         """Validates user-inputted time and 
         converts it to RFC 3339 time format to 
         create a startTime or stoptime element"""
-
         if type(time) is not datetime:
             raise TypeError("%s is not a valid %s" % (str(time), time_string))
+        timestr = time.isoformat()
+        if len(timestr) == 19:
+            timestr += "."
+        while len(timestr) != 26:
+            timestr += "0"
         timeTag = etree.Element(time_string, xmlns=namespace)
-        timeTag.text = time.isoformat() + "Z"
+        timeTag.text = timestr + "Z"
         return timeTag
     
     def build_filter(self, updatefilter):
