@@ -170,8 +170,25 @@ class MainApplication:
 
 	def update_Subscription(self, notification):
 		subID = ET.fromstring(notification.data_xml)[0].text
-		status = notification.typeStr
-		if self.tree.exists(subID):		
+		type = notification.type
+		status = ""
+		if self.tree.exists(subID):			
+			if type == 11 or 12:
+				status = "active"
+			elif type == 10:
+				status = "resumed"
+			elif type == 9:
+				status = "suspended"	
+			elif type == 8:
+				status = "terminated"	
+			elif type == 7:
+				status = "modified"
+			elif type == 6:
+				status = "started"
+			elif type == 5:
+				status = "complete"
+			elif type == 4:
+				status = "replay complete"			
 			self.tree.set(subID, column="Status", value=status)
 		else:
 			return

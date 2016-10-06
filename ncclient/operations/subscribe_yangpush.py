@@ -339,13 +339,6 @@ class EstablishSubscription(RPC):
         # add NotificationListener to retrieve the notifications
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
-            print("88888888888888888888888888888888888888888888888888888888888")
-            print("Listener added!")
-            print("88888888888888888888888888888888888888888888888888888888888")
-        else:
-            print("11111111111111111111111111111111111111111111111111111111111")
-            print("No Listener added!")
-            print("11111111111111111111111111111111111111111111111111111111111")
         
         # send the RPC
         return self._request(subscription_node)
@@ -376,13 +369,6 @@ class GetSubscription(RPC):
             node.append(util.build_filter(filter))
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
-            print("88888888888888888888888888888888888888888888888888888888888")
-            print("Listener added!")
-            print("88888888888888888888888888888888888888888888888888888888888")
-        else:
-            print("11111111111111111111111111111111111111111111111111111111111")
-            print("No Listener added!")
-            print("11111111111111111111111111111111111111111111111111111111111")
         return self._request(node)
 
     
