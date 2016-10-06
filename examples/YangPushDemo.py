@@ -70,13 +70,8 @@ class MainApplication:
 	def callback(self, notification):
 		print("callback called")
 		print(notification)
-	
-		subID = ET.fromstring(notification.data_xml)[0].text
-		status = notification.typeStr
-		print(subID)
-		print(status)
-		self.update_Subscription(subID, status)
-		
+
+		self.update_Subscription(notification)
 				
 	def errback(self, ex):
 		print("errback called.")
@@ -173,12 +168,36 @@ class MainApplication:
 					dependency))
 		
 
-	def update_Subscription(self, subID, status):
+	def update_Subscription(self, notification):
+		subID = ET.fromstring(notification.data_xml)[0].text
+		status = notification.typeStr
 		if self.tree.exists(subID):		
 			self.tree.set(subID, column="Status", value=status)
 		else:
 			return
 
+	def get_Session(self, server, user, password):
+		
+		sessionUp = False
+				
+		for entry in self.sessions:
+			if entry[0] == server:
+				session = entry[1]
+				sessionUp = True
+			
+		if sessionUp is False:
+			print("no such session!")
+			session = manager.connect(
+				host=server, port=2830, 
+				username=user, 
+				password=password, 
+				device_params={'name':'opendaylight'}, 
+				hostkey_verify=False, 
+				look_for_keys=False, 
+				allow_agent=False)
+			self.sessions.append((server, session))
+			
+		return session
 
 	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
@@ -413,22 +432,11 @@ class NewSubscriptionWindow:
 			if self.excludeStr == "":
 				self.excludeStr = None
 				
-		#if (self.host, session) in self.controller.sessions:
-		#	print (True)
+		self.session = self.controller.get_Session(self.host, self.user, self.password)
 
-		session = manager.connect(
-			host=self.host, port=2830, 
-			username=self.user, 
-			password=self.password, 
-			device_params={'name':'opendaylight'}, 
-			hostkey_verify=False, 
-			look_for_keys=False, 
-			allow_agent=False)
-
-		rpc_reply = session.establish_subscription(
+		self.rpc_reply = self.session.establish_subscription(
 			callback=self.controller.callback, 
-			errback=self.controller.errback, 
-			manager=session, 
+			errback=self.controller.errback,
 			encoding=self.encoding, 
 			stream=self.stream, 
 			start_time=self.startTime, 
@@ -443,14 +451,14 @@ class NewSubscriptionWindow:
 			no_synch_on_start=self.noSynchOnStart, 
 			excluded_change=self.excludeStr)
 		
-		xmlroot = ET.fromstring(rpc_reply.xml)	
+		xmlroot = ET.fromstring(self.rpc_reply.xml)	
 		
 		for child in xmlroot:
 			if child.tag[-len("subscription-id"):] == "subscription-id":
 				self.subID = child.text
 		
-		if rpc_reply.ok:
-			self.controller.add_new_subscription(self.subID, self.host, session)
+		if self.rpc_reply.ok:
+			self.controller.add_new_subscription(self.subID, self.host, self.session)
 			self.close_window()
 
 	def updateTriggerChange(self, a, b, c):
@@ -573,17 +581,16 @@ class GetSubscriptionWindow:
 		self.password = self.E_Password.get()
 		self.subID = self.E_SubID.get()
 
-		self.session = manager.connect(host=self.host, port=2830, username=self.user, 
-			password=self.password, device_params={'name':'opendaylight'}, hostkey_verify=False, look_for_keys=False, allow_agent=False)
+		self.session = self.controller.get_Session(self.host, self.user, self.password)
 		
 		FILTERXML = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"></subscriptions>"""
 		FILTERXMLID = """<subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-event-notifications"><subscription><subscription-id>%s</subscription-id></subscription></subscriptions>""" % self.subID
 
 		if self.subID == "":
-			self.rpc_reply = self.session.get(filter=("subtree", FILTERXML))
+			self.rpc_reply = self.session.get_subscription(callback=self.controller.callback, errback=self.controller.errback,filter=("subtree", FILTERXML))
 			singlenode = False
 		else:
-			self.rpc_reply = self.session.get(filter=("subtree", FILTERXMLID))
+			self.rpc_reply = self.session.get_subscription(callback=self.controller.callback, errback=self.controller.errback, filter=("subtree", FILTERXMLID))
 			singlenode = True	
 		
 		self.controller.add_subscription(singlenode, self.rpc_reply, self.host, self.session)

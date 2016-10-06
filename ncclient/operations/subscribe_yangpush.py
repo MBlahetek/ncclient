@@ -197,7 +197,7 @@ class EstablishSubscription(RPC):
                
         return filter_ele
 
-    def request(self, callback, errback, manager=None, retries=20, delay=1,
+    def request(self, callback, errback,
         encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
         sub_start_time=None, sub_stop_time=None, priority=None, dependency=None, 
         update_trigger=None, period=None, no_synch_on_start=None, excluded_change=None):
@@ -207,17 +207,6 @@ class EstablishSubscription(RPC):
         *callback* User-defined callback function to be invoked when a notification arrives
 
         *errback* User-defined function to e invoked when an error occurs
-
-        *manager* Manager object returned when user connects to NETCONF server,
-        used to store connection info so ncclient can reconnect using that information
-        (by default ncclient will not handle reconnecting the NETCONF server if user 
-        does not pass in a manager)
-
-        *retries* Specifies the number of times ncclient will attempt to reconnect to
-        the NETCONF server if the connection is dropped
-
-        *delay* Specifies the time ncclient will wait between consecutive attempts to
-        reconnect to the NETCONF server following a dropped connection
 
         *encoding* Distinguish between the proper encoding that was specified
         for the subscription (by default XML)
@@ -345,12 +334,7 @@ class EstablishSubscription(RPC):
             
         # add NotificationListener to retrieve the notifications
 
-        self.session.add_listener(YangPushNotificationListener(callback, errback, 
-            manager=manager, retries=retries, delay=delay, 
-            encoding=encoding, stream=stream, update_filter=update_filter, 
-            start_time=start_time, stop_time=stop_time, priority=priority,
-            dependency=dependency, update_trigger=update_trigger, period=period,
-            no_synch_on_start=no_synch_on_start, excluded_change=excluded_change))
+        self.session.add_listener(YangPushNotificationListener(callback, errback))
         
         # send the RPC
         return self._request(subscription_node)
@@ -366,6 +350,22 @@ class DeleteSubscription(RPC):
         delete_subscription_node.append(idTag)
         
         return self._request(delete_subscription_node)
+
+class GetSubscription(RPC):
+
+    def request(self, callback, errback, filter=None):
+        """Retrieve running configuration and device state information.
+
+        *filter* specifies the portion of the configuration to retrieve (by default entire configuration is retrieved)
+
+        :seealso: :ref:`filter_params`
+        """
+        node = new_ele("get")
+        if filter is not None:
+            node.append(util.build_filter(filter))
+        self.session.add_listener(YangPushNotificationListener(callback, errback))
+        return self._request(node)
+
     
 
 class YangPushNotificationListener(SessionListener):
@@ -374,23 +374,14 @@ class YangPushNotificationListener(SessionListener):
     which are notified when a new RFC 5277 notification
     is received or an error occurs."""
 
-    def __init__(self, user_callback, user_errback, manager, retries, delay,
-        encoding, stream, update_filter, start_time, stop_time,
-        priority, dependency, update_trigger, period,
-        no_synch_on_start, excluded_change):
-        """Called by EstablishSubscription when a new YangPushNotificationListener is added to a session.
-        used to keep track of connection and subscription info in case connection gets dropped."""
+    def __init__(self, user_callback, user_errback):
+        """Called by EstablishSubscription when a new YangPushNotificationListener is added to a session."""
         self.user_callback = user_callback
         self.user_errback = user_errback
-        self.manager, self.retries, self.delay = manager, retries, delay
-        self.encoding, self.stream, self.update_filter = encoding, stream, update_filter
-        self.priority, self.dependency = priority, dependency
-        self.update_trigger, self.period = update_trigger, period
-        self.no_synch_on_start, self.excluded_change = no_synch_on_start, excluded_change
-        self.reconnect_time, self.stop_time = start_time, stop_time
+
 
     def callback(self, root, raw):
-        """Called when a new RFC 5277 notification is received.
+        """Called when a new notification is received.
         The *root* argument allows the callback to determine whether the message is a notification.
         Here, *root* is a tuple of *(tag, attributes)* where *tag*
         is the qualified name of the root element and *attributes* is a dictionary of its attributes (also qualified names).
@@ -410,32 +401,7 @@ class YangPushNotificationListener(SessionListener):
             self.user_errback(notification)
 
     def errback(self, ex):
-        """Called when an error occurs.
-        For now just handles a dropped connection.
-
-        :type ex: :exc:`Exception`
-        """
+        """Called when an error occurs."""
         self.user_errback(ex)
-        """
-        if self.manager is not None:
-            disconnected = True
-            retries = self.retries
-            while disconnected and retries > 0:
-                try:
-                    self.user_errback(ReconnectError("Attempting to reconnect"))
-                    session = ncclient.manager.connect(**self.manager.kwargs)
-                    session.establish_subscription(self.user_callback, self.user_errback,
-                        manager=self.manager, retries=self.retries, delay=self.delay,
-                        encoding=self.encoding, stream=self.stream, update_filter=self.update_filter, 
-                        start_time=self.reconnect_time, stop_time=self.stop_time, dscp=self.dscp, 
-                        priority=self.priority, dependency=self.dependency, update_trigger=self.update_trigger,
-                        period=self.period, no_synch_on_start=self.no_synch_on_start, excluded_change= self.excluded_change)
-                    disconnected = False
-                except Exception as e:
-                    self.user_errback(ReconnectError("Failed to reconnect, trying again"))
-                    time.sleep(self.delay)
-                retries = retries - 1
-            if retries == 0:
-                self.user_errback(ReconnectError("Connection refused after %d attempts, giving up" % self.retries))
-        """
+        
         

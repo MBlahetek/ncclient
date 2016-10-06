@@ -49,7 +49,8 @@ OPERATIONS = {
     "reboot_machine": operations.RebootMachine,
     "create_subscription": subscribe.CreateSubscription,
     "establish_subscription": subscribe_yangpush.EstablishSubscription,
-    "delete_subscription": subscribe_yangpush.DeleteSubscription
+    "delete_subscription": subscribe_yangpush.DeleteSubscription,
+    "get_subscription": subscribe_yangpush.GetSubscription
 }
 
 """
