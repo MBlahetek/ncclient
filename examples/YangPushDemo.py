@@ -29,8 +29,8 @@ class MainApplication:
 		minwidth=100
 		self.tree.column("Server", width=130, minwidth=minwidth)
 		self.tree.column("Subscription ID", width=160, minwidth=minwidth)
-		self.tree.column("Status", width=160, minwidth=minwidth)
-		self.tree.column("Stream", width=180, minwidth=minwidth)
+		self.tree.column("Status", width=200, minwidth=minwidth)
+		self.tree.column("Stream", width=190, minwidth=minwidth)
 		self.tree.column("Filter", width=210, minwidth=minwidth)
 		self.tree.column("Replay start time", width=120, minwidth=minwidth)
 		self.tree.column("Replay stop time", width=120, minwidth=minwidth)
@@ -38,7 +38,7 @@ class MainApplication:
 		self.tree.column("Start time", width=310, minwidth=minwidth)
 		self.tree.column("Stop time", width=310, minwidth=minwidth)
 		self.tree.column("Update-trigger", width=150, minwidth=minwidth)
-		self.tree.column("Period", width=110, minwidth=minwidth)
+		self.tree.column("Period", width=120, minwidth=minwidth)
 		self.tree.column("Priority", width=100, minwidth=minwidth)
 		self.tree.column("Dependency", width=130, minwidth=minwidth)
 
@@ -53,7 +53,7 @@ class MainApplication:
 		self.tree.heading("Start time", text="Start time")
 		self.tree.heading("Stop time", text="Stop time")
 		self.tree.heading("Update-trigger", text="Update-trigger")
-		self.tree.heading("Period", text="Period")
+		self.tree.heading("Period", text="Period (ms)")
 		self.tree.heading("Priority", text="Priority")
 		self.tree.heading("Dependency", text="Dependency")
 
@@ -66,8 +66,8 @@ class MainApplication:
 		self.tree.tag_configure("terminated", background="OrangeRed")	
 		self.tree.tag_configure("modified", background="Khaki")
 		self.tree.tag_configure("started", background="LightGreen")
-		self.tree.tag_configure("complete", background="LightGreen")
-		self.tree.tag_configure("replay complete", background="LightGreen")
+		self.tree.tag_configure("complete", background="Green")
+		self.tree.tag_configure("replay complete", background="Green")
 		
 		self.mainframe.grid()
 
@@ -153,7 +153,7 @@ class MainApplication:
 							values=(
 								server, 
 								subID, 
-								"waiting for first Notification", 
+								"waiting for first notification", 
 								stream, 
 								filter, 
 								startTime, 
@@ -168,7 +168,7 @@ class MainApplication:
 			
 			self.tree.item(subID, tags=("waiting"))		
 			
-	def add_subscription(self, singlenode, rpc_reply, server, session):
+	def add_subscriptions(self, singlenode, rpc_reply, server, session):
 		
 		root = ET.fromstring(rpc_reply.xml)
 		if singlenode:
@@ -235,7 +235,7 @@ class MainApplication:
 			self.tree.insert(parent="", index="end", iid=subID, 
 				values=(server, 
 					subID,  
-					"waiting for first Notification", 
+					"waiting for first notification", 
 					stream, 
 					filter, 
 					startTime, 
@@ -255,30 +255,22 @@ class MainApplication:
 		type = notification.type
 		status = ""
 		if self.tree.exists(subID):			
-			if type == 11 or 12:
+			if type == 11 or type == 12:
 				status = "active"
-				#background = "green"
 			elif type == 10:
 				status = "resumed"
-				#background = "green"
 			elif type == 9:
 				status = "suspended"
-				#background = "yellow"
 			elif type == 8:
 				status = "terminated"
-				#background = "red"	
 			elif type == 7:
 				status = "modified"
-				#background = "yellow"
 			elif type == 6:
 				status = "started"
-				#background = "green"
 			elif type == 5:
 				status = "complete"
-				#background = "green"
 			elif type == 4:
 				status = "replay complete"
-				#background = "green"		
 			self.tree.set(subID, column="Status", value=status)
 			self.tree.item(subID, tags=(status))
 
@@ -997,7 +989,7 @@ class GetSubscriptionWindow:
 				filter=("subtree", FILTERXMLID))
 			singlenode = True	
 		
-		self.controller.add_subscription(singlenode, self.rpc_reply, self.host, self.session[0])
+		self.controller.add_subscriptions(singlenode, self.rpc_reply, self.host, self.session[0])
 
 		self.close_window()
 

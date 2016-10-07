@@ -47,8 +47,6 @@ class NotificationType(object):
     YANG_PUSH_UPDATE = 11
     YANG_PUSH_CHANGE_UPDATE = 12
 
-
-
     @staticmethod
     def str_to_type(string):
         lookup = {"netconf-config-change": NotificationType.NETCONF_CONFIG_CHANGE,
@@ -106,7 +104,6 @@ class YangPushNotification(object):
             self._typeStr = re.sub("{.*}", "", data.tag)
             self._type = NotificationType.str_to_type(self._typeStr)
 
-            
             self._data = data
 
             # This might be unnecessary if callback is never invoked
@@ -161,21 +158,12 @@ class YangPushNotification(object):
     @property
     def invalid(self):
         return self._invalid
-
-
+    
 
 class EstablishSubscription(RPC):
 
-    """The *establish-subscription* RPC.
-    According to draft 5277bis."""
-
-
-
     def datetime_to_rfc(self, time_string, time, namespace):
 
-        """Validates user-inputted time and 
-        converts it to RFC 3339 time format to 
-        create a startTime or stoptime element"""
         if type(time) is not datetime:
             raise TypeError("%s is not a valid %s" % (str(time), time_string))
         timestr = time.isoformat()
@@ -193,11 +181,8 @@ class EstablishSubscription(RPC):
         if type == "subtree":
             filter_ele = etree.Element("filter", type=type, xmlns=EVENT_NOTIFICATION_NS)
             filter_ele.append(to_ele(path))
-            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="subtree">
-            #<ns0:devices xmlns:ns0="http://tail-f.com/ns/ncs"><device><name/></device></ns0:devices>
         else:
             filter_ele = etree.Element("filter", select=path, type=type, xmlns=EVENT_NOTIFICATION_NS)
-            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="xpath" select="/devices/device/name"/>
                
         return filter_ele
 
@@ -260,10 +245,7 @@ class EstablishSubscription(RPC):
         *excluded_change* (on change only) Use to restrict which changes trigger an update.
         For example, if modify is excluded, only creation and deletion of objects 
         is reported.
-
-        :seealso: :ref:`filter_params`"""
-
-        # catch possible errors
+        """
 
         if callback is None:
             raise ValueError("Missing a callback function")
@@ -274,13 +256,9 @@ class EstablishSubscription(RPC):
         if period is None:
             raise ValueError("Missing period")
 
-        # check if on change parameters are set for periodic subscription
-
         if (no_synch_on_start or excluded_change is not None) and update_trigger != "on-change":
             raise ValueError("Can not set on change update parameters for periodic updates")
 
-
-        # build XML tree for the RPC request
 
         subscription_node = etree.Element("establish-subscription", xmlns=EVENT_NOTIFICATION_NS)
 
@@ -340,7 +318,6 @@ class EstablishSubscription(RPC):
                 excluded_changeTag.text = excluded_change
                 subscription_node.append(excluded_changeTag)
             
-        # add NotificationListener to retrieve the notifications
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
         
@@ -349,14 +326,8 @@ class EstablishSubscription(RPC):
     
 class ModifySubscription(RPC):
 
-    """The *establish-subscription* RPC.
-    According to draft 5277bis."""
-
     def datetime_to_rfc(self, time_string, time, namespace):
 
-        """Validates user-inputted time and 
-        converts it to RFC 3339 time format to 
-        create a startTime or stoptime element"""
         if type(time) is not datetime:
             raise TypeError("%s is not a valid %s" % (str(time), time_string))
         timestr = time.isoformat()
@@ -374,11 +345,8 @@ class ModifySubscription(RPC):
         if type == "subtree":
             filter_ele = etree.Element("filter", type=type, xmlns=EVENT_NOTIFICATION_NS)
             filter_ele.append(to_ele(path))
-            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="subtree">
-            #<ns0:devices xmlns:ns0="http://tail-f.com/ns/ncs"><device><name/></device></ns0:devices>
         else:
             filter_ele = etree.Element("filter", select=path, type=type, xmlns=EVENT_NOTIFICATION_NS)
-            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="xpath" select="/devices/device/name"/>
                
         return filter_ele
 
@@ -386,8 +354,6 @@ class ModifySubscription(RPC):
         encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
         sub_start_time=None, sub_stop_time=None, priority=None, dependency=None, 
         update_trigger=None, period=None, no_synch_on_start=None, excluded_change=None):
-
-        # catch possible errors
 
         if callback is None:
             raise ValueError("Missing a callback function")
@@ -398,13 +364,9 @@ class ModifySubscription(RPC):
         if period is None:
             raise ValueError("Missing period")
 
-        # check if on change parameters are set for periodic subscription
-
         if (no_synch_on_start or excluded_change is not None) and update_trigger != "on-change":
             raise ValueError("Can not set on change update parameters for periodic updates")
 
-
-        # build XML tree for the RPC request
 
         modify_node = etree.Element("modify-subscription", xmlns=EVENT_NOTIFICATION_NS)
 
@@ -467,7 +429,7 @@ class ModifySubscription(RPC):
         subIDTag = etree.Element("subscription-id", xmlns=EVENT_NOTIFICATION_NS)
         subIDTag.text = subID
         modify_node.append(subIDTag)  
-        # add NotificationListener to retrieve the notifications
+
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
         
@@ -489,12 +451,7 @@ class DeleteSubscription(RPC):
 class GetSubscription(RPC):
 
     def request(self, callback, errback, notifListening=False, filter=None):
-        """Retrieve running configuration and device state information.
 
-        *filter* specifies the portion of the configuration to retrieve (by default entire configuration is retrieved)
-
-        :seealso: :ref:`filter_params`
-        """
         node = new_ele("get")
         if filter is not None:
             node.append(util.build_filter(filter))
