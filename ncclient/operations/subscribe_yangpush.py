@@ -285,12 +285,12 @@ class EstablishSubscription(RPC):
         subscription_node = etree.Element("establish-subscription", xmlns=EVENT_NOTIFICATION_NS)
 
         if encoding is not None:
-            encodingTag = etree.Element("encoding")
+            encodingTag = etree.Element("encoding", xmlns=EVENT_NOTIFICATION_NS)
             encodingTag.text = encoding
             subscription_node.append(encodingTag)
 
         if stream is not None:
-            streamTag = etree.Element("stream")
+            streamTag = etree.Element("stream", xmlns=EVENT_NOTIFICATION_NS)
             streamTag.text = stream
             subscription_node.append(streamTag)
 
@@ -346,6 +346,134 @@ class EstablishSubscription(RPC):
         
         # send the RPC
         return self._request(subscription_node)
+    
+class ModifySubscription(RPC):
+
+    """The *establish-subscription* RPC.
+    According to draft 5277bis."""
+
+    def datetime_to_rfc(self, time_string, time, namespace):
+
+        """Validates user-inputted time and 
+        converts it to RFC 3339 time format to 
+        create a startTime or stoptime element"""
+        if type(time) is not datetime:
+            raise TypeError("%s is not a valid %s" % (str(time), time_string))
+        timestr = time.isoformat()
+        if len(timestr) == 19:
+            timestr += "."
+        while len(timestr) != 26:
+            timestr += "0"
+        timeTag = etree.Element(time_string, xmlns=namespace)
+        timeTag.text = timestr + "Z"
+        return timeTag
+    
+    def build_filter(self, updatefilter):
+        type = updatefilter[0]
+        path = updatefilter[1]
+        if type == "subtree":
+            filter_ele = etree.Element("filter", type=type, xmlns=EVENT_NOTIFICATION_NS)
+            filter_ele.append(to_ele(path))
+            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="subtree">
+            #<ns0:devices xmlns:ns0="http://tail-f.com/ns/ncs"><device><name/></device></ns0:devices>
+        else:
+            filter_ele = etree.Element("filter", select=path, type=type, xmlns=EVENT_NOTIFICATION_NS)
+            #<nc:filter xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" type="xpath" select="/devices/device/name"/>
+               
+        return filter_ele
+
+    def request(self, callback, errback, subID, notifListening=False,
+        encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
+        sub_start_time=None, sub_stop_time=None, priority=None, dependency=None, 
+        update_trigger=None, period=None, no_synch_on_start=None, excluded_change=None):
+
+        # catch possible errors
+
+        if callback is None:
+            raise ValueError("Missing a callback function")
+
+        if errback is None:
+            raise ValueError("Missing a errback function")
+
+        if period is None:
+            raise ValueError("Missing period")
+
+        # check if on change parameters are set for periodic subscription
+
+        if (no_synch_on_start or excluded_change is not None) and update_trigger != "on-change":
+            raise ValueError("Can not set on change update parameters for periodic updates")
+
+
+        # build XML tree for the RPC request
+
+        modify_node = etree.Element("modify-subscription", xmlns=EVENT_NOTIFICATION_NS)
+        
+        subIDTag = etree.Element("subscription-id", xmlns=EVENT_NOTIFICATION_NS)
+        subIDTag.text = subID
+        modify_node.append(subIDTag)
+
+        if encoding is not None:
+            encodingTag = etree.Element("encoding", xmlns=EVENT_NOTIFICATION_NS)
+            encodingTag.text = encoding
+            modify_node.append(encodingTag)
+
+        if stream is not None:
+            streamTag = etree.Element("stream", xmlns=EVENT_NOTIFICATION_NS)
+            streamTag.text = stream
+            modify_node.append(streamTag)
+
+        if start_time is not None:
+            modify_node.append(self.datetime_to_rfc("startTime", start_time, EVENT_NOTIFICATION_NS))
+
+        if stop_time is not None:
+            modify_node.append(self.datetime_to_rfc("stopTime", stop_time, EVENT_NOTIFICATION_NS))
+
+        if update_filter is not None:
+            modify_node.append(self.build_filter(update_filter))
+
+        if sub_start_time is not None:
+            modify_node.append(self.datetime_to_rfc("subscription-start-time", sub_start_time, YANGPUSH_NOTIFICATION_NS))
+
+        if sub_stop_time is not None:
+            modify_node.append(self.datetime_to_rfc("subscription-stop-time", sub_stop_time, YANGPUSH_NOTIFICATION_NS))
+
+        if priority is not None:
+            priorityTag = etree.Element("subscription-priority", xmlns=YANGPUSH_NOTIFICATION_NS)
+            priorityTag.text = priority
+            modify_node.append(priorityTag)
+
+        if dependency is not None:
+            dependencyTag = etree.Element("subscription-dependency", xmlns=YANGPUSH_NOTIFICATION_NS)
+            dependencyTag.text = dependency
+            modify_node.append(dependencyTag)    
+
+        if update_trigger == "periodic":
+            periodTag = etree.Element("period", xmlns=YANGPUSH_NOTIFICATION_NS)
+            periodTag.text = period
+            modify_node.append(periodTag)
+
+        if update_trigger == "on-change":
+            periodTag = etree.Element("dampening-period", xmlns=YANGPUSH_NOTIFICATION_NS)
+            periodTag.text = period
+            modify_node.append(periodTag)
+
+            
+            if no_synch_on_start is not None:
+                no_synch_on_startTag = etree.Element("no-synch-on-start", xmlns=YANGPUSH_NOTIFICATION_NS)
+                # a flag element, no text needed.
+                modify_node.append(no_synch_on_startTag)
+
+            if excluded_change is not None:
+                excluded_changeTag = etree.Element("excluded-change", xmlns=YANGPUSH_NOTIFICATION_NS)
+                excluded_changeTag.text = excluded_change
+                modify_node.append(excluded_changeTag)
+            
+        # add NotificationListener to retrieve the notifications
+        if notifListening is False:
+            self.session.add_listener(YangPushNotificationListener(callback, errback))
+        
+        # send the RPC
+        return self._request(modify_node)    
 
 class DeleteSubscription(RPC):
     
