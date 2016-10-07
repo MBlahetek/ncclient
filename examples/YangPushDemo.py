@@ -58,7 +58,17 @@ class MainApplication:
 		self.tree.heading("Dependency", text="Dependency")
 
 		self.tree.grid()
-
+		
+		self.tree.tag_configure("waiting", background="Khaki")
+		self.tree.tag_configure("active", background="LightGreen")
+		self.tree.tag_configure("resumed", background="LightGreen")
+		self.tree.tag_configure("suspended", background="Khaki")
+		self.tree.tag_configure("terminated", background="OrangeRed")	
+		self.tree.tag_configure("modified", background="Khaki")
+		self.tree.tag_configure("started", background="LightGreen")
+		self.tree.tag_configure("complete", background="LightGreen")
+		self.tree.tag_configure("replay complete", background="LightGreen")
+		
 		self.mainframe.grid()
 
 		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.new_Subscription).grid(row=1, column=0)
@@ -82,8 +92,7 @@ class MainApplication:
 	def add_to_treeview(self, subID, server, stream, encoding, updateTrigger, period, filter=None, 
 					startTime=None, stopTime=None, subStartTime=None, subStopTime=None, priority=None, dependency=None):
 
-		if self.tree.exists(subID):
-			self.tree.set(subID, column="Status", value="waiting for first Notification")			
+		if self.tree.exists(subID):			
 			self.tree.set(subID, column="Stream", value=stream)
 			self.tree.set(subID, column="Encoding", value=encoding)
 			self.tree.set(subID, column="Update-trigger", value=updateTrigger)
@@ -155,7 +164,9 @@ class MainApplication:
 								updateTrigger, 
 								period, 
 								priority, 
-								dependency))		
+								dependency))
+			
+			self.tree.item(subID, tags=("waiting"))		
 			
 	def add_subscription(self, singlenode, rpc_reply, server, session):
 		
@@ -178,12 +189,8 @@ class MainApplication:
 					existing = True
 			if child.tag[-len("subscription-start-time"):] == "subscription-start-time":
 				subStartTime = child.text
-				if subStartTime == "-1":
-					subStartTime = "not set"
 			if child.tag[-len("subscription-stop-time"):] == "subscription-stop-time":
 				subStopTime = child.text
-				if subStopTime == "-1":
-					subStopTime = "not set"
 			if child.tag[-len("subscription-priority"):] == "subscription-priority":
 				priority = child.text
 			if child.tag[-len("subscription-dependency"):] == "subscription-dependency":
@@ -194,12 +201,8 @@ class MainApplication:
 				stream = child.text
 			if child.tag[-len("startTime"):] == "startTime":
 				startTime = child.text
-				if startTime == "-1":
-					startTime = "not set"
 			if child.tag[-len("stopTime"):] == "stopTime":
 				stopTime = child.text
-				if stopTime == "-1":
-					stopTime = "not set"
 			if child.tag[-len("period"):] == "period":
 				period = child.text
 				updateTrigger = "periodic"
@@ -209,7 +212,6 @@ class MainApplication:
 				
 		if existing:
 			self.tree.set(subID, column="Server", value=server)
-			self.tree.set(subID, column="Status", value="waiting for first Notification")
 			self.tree.set(subID, column="Stream", value=stream)
 			self.tree.set(subID, column="Filter", value=filter)
 			self.tree.set(subID, column="Replay start time", value=startTime)
@@ -221,7 +223,15 @@ class MainApplication:
 			self.tree.set(subID, column="Period", value=period)
 			self.tree.set(subID, column="Priority", value=priority)
 			self.tree.set(subID, column="Dependency", value=dependency)
-		else:		
+		else:
+			if subStartTime is None:
+				subStartTime = "not set"
+			if subStopTime is None:
+				subStopTime = "not set"
+			if startTime is None:
+				startTime = "not set"	
+			if stopTime is None:
+				stopTime = "not set"	
 			self.tree.insert(parent="", index="end", iid=subID, 
 				values=(server, 
 					subID,  
@@ -237,6 +247,7 @@ class MainApplication:
 					period,  
 					priority, 
 					dependency))
+			self.tree.item(subID, tags=("waiting"))
 		
 
 	def update_Subscription(self, notification):
@@ -246,21 +257,31 @@ class MainApplication:
 		if self.tree.exists(subID):			
 			if type == 11 or 12:
 				status = "active"
+				#background = "green"
 			elif type == 10:
 				status = "resumed"
+				#background = "green"
 			elif type == 9:
-				status = "suspended"	
+				status = "suspended"
+				#background = "yellow"
 			elif type == 8:
-				status = "terminated"	
+				status = "terminated"
+				#background = "red"	
 			elif type == 7:
 				status = "modified"
+				#background = "yellow"
 			elif type == 6:
 				status = "started"
+				#background = "green"
 			elif type == 5:
 				status = "complete"
+				#background = "green"
 			elif type == 4:
-				status = "replay complete"			
+				status = "replay complete"
+				#background = "green"		
 			self.tree.set(subID, column="Status", value=status)
+			self.tree.item(subID, tags=(status))
+
 		else:
 			return
 
