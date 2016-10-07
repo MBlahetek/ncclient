@@ -407,10 +407,6 @@ class ModifySubscription(RPC):
         # build XML tree for the RPC request
 
         modify_node = etree.Element("modify-subscription", xmlns=EVENT_NOTIFICATION_NS)
-        
-        subIDTag = etree.Element("subscription-id", xmlns=EVENT_NOTIFICATION_NS)
-        subIDTag.text = subID
-        modify_node.append(subIDTag)
 
         if encoding is not None:
             encodingTag = etree.Element("encoding", xmlns=EVENT_NOTIFICATION_NS)
@@ -467,7 +463,10 @@ class ModifySubscription(RPC):
                 excluded_changeTag = etree.Element("excluded-change", xmlns=YANGPUSH_NOTIFICATION_NS)
                 excluded_changeTag.text = excluded_change
                 modify_node.append(excluded_changeTag)
-            
+          
+        subIDTag = etree.Element("subscription-id", xmlns=EVENT_NOTIFICATION_NS)
+        subIDTag.text = subID
+        modify_node.append(subIDTag)  
         # add NotificationListener to retrieve the notifications
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
