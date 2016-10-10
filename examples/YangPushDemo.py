@@ -7,6 +7,7 @@ import Tkinter as tk
 import time
 import ttk
 import tkFont
+import tkMessageBox
 import xml.etree.ElementTree as ET
 
 
@@ -14,6 +15,7 @@ class MainApplication:
 	def __init__(self, master):
 		self.master = master
 		self.sessions = []
+		self.filters = []
 
 		self.calc_window_size(self.master)
 
@@ -59,6 +61,8 @@ class MainApplication:
 
 		self.tree.grid()
 		
+		self.tree.bind("<Double-1>", self.OnDoubleClick)
+		
 		self.tree.tag_configure("waiting", background="Khaki")
 		self.tree.tag_configure("active", background="LightGreen")
 		self.tree.tag_configure("resumed", background="LightGreen")
@@ -97,9 +101,13 @@ class MainApplication:
 			self.tree.set(subID, column="Encoding", value=encoding)
 			self.tree.set(subID, column="Update-trigger", value=updateTrigger)
 			self.tree.set(subID, column="Period", value=period)
-			if filter is None:
-				filter = "/*"			
+			if filter is not None:			
 				self.tree.set(subID, column="Filter", value=filter)
+				for entry in self.filters:
+					if entry[0] == subID:
+						self.filters.remove(entry)
+						self.filters.append((subID, filter))
+						break	
 			if startTime is not None:
 				startTime = startTime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')	
 				self.tree.set(subID, column="Replay start time", value=startTime)
@@ -116,11 +124,10 @@ class MainApplication:
 				self.tree.set(subID, column="Priority", value=priority)
 			if dependency is not None:
 				self.tree.set(subID, column="Dependency", value=dependency)
+							
 		else:
 			if filter is None:
-				filter = "/*"
-			#else:
-				#Parse subtree to xpath view
+				filter = "not set"
 				
 			if startTime is None:
 				startTime = "not set"
@@ -153,7 +160,7 @@ class MainApplication:
 							values=(
 								server, 
 								subID, 
-								"waiting for first notification", 
+								"waiting", 
 								stream, 
 								filter, 
 								startTime, 
@@ -166,6 +173,7 @@ class MainApplication:
 								priority, 
 								dependency))
 			
+			self.filters.append((subID, filter))
 			self.tree.item(subID, tags=("waiting"))		
 			
 	def add_subscriptions(self, singlenode, rpc_reply, server, session):
@@ -223,6 +231,11 @@ class MainApplication:
 			self.tree.set(subID, column="Period", value=period)
 			self.tree.set(subID, column="Priority", value=priority)
 			self.tree.set(subID, column="Dependency", value=dependency)
+			for entry in self.filters:
+				if entry[0] == subID:
+					self.filters.remove(entry)
+					self.filters.append((subID, filter))
+					break	
 		else:
 			if subStartTime is None:
 				subStartTime = "not set"
@@ -235,7 +248,7 @@ class MainApplication:
 			self.tree.insert(parent="", index="end", iid=subID, 
 				values=(server, 
 					subID,  
-					"different session ID", 
+					"waiting", 
 					stream, 
 					filter, 
 					startTime, 
@@ -247,6 +260,7 @@ class MainApplication:
 					period,  
 					priority, 
 					dependency))
+			self.filters.append((subID, filter))
 			self.tree.item(subID, tags=("waiting"))
 		
 
@@ -285,6 +299,7 @@ class MainApplication:
 			if entry[0] == server:
 				session = entry[1]
 				sessionUp = True
+				break
 			
 		if sessionUp is False:
 			session = manager.connect(
@@ -298,6 +313,21 @@ class MainApplication:
 			self.sessions.append((server, session))
 			
 		return (session, sessionUp)
+	
+	def OnDoubleClick(self, event):
+		subID = self.tree.focus()
+		header = "ID: " + subID + " - Filter"
+		filter = ""
+		if subID != "":
+			for entry in self.filters:
+				if entry[0] == subID:
+					filter = entry[1]
+					break
+			self.filter_Message_Box(subID, filter)
+			
+	def filter_Message_Box(self, subID, filter):
+		self.newWindow = tk.Toplevel(self.master)
+		self.app = FilterMessageBox(self.newWindow, self, subID, filter)
 
 	def get_Subscription(self):
 		self.newWindow = tk.Toplevel(self.master)
@@ -859,6 +889,7 @@ class ModifySubscriptionWindow:
 				subStopTime=self.subStopTime, 
 				priority=self.subPriority, 
 				dependency=self.subDependency)
+			
 			self.close_window()
 		else:
 			print("subscription-result: " + self.result)
@@ -933,6 +964,10 @@ class DeleteSubscriptionWindow:
 			if self.controller.tree.set(self.subID, column="Status") != "complete":
 				self.rpc_reply = self.session[0].delete_subscription(self.subID)
 			self.controller.tree.delete(self.subID)
+			for entry in self.controller.filters:
+				if entry[0] == self.subID:
+					self.controller.filters.remove(entry)
+					break
 			self.close_window()
 		
 	def close_window(self):
@@ -1007,7 +1042,25 @@ class GetSubscriptionWindow:
 
 	def close_window(self):
 		self.master.destroy()
+
+class FilterMessageBox:
+	def __init__(self, master, controller, subID, filter):
+		self.master = master
+		self.topframe = tk.Frame(self.master)
+		self.controller = controller
+		self.subID = subID
+		self.filter = filter
+
+		self.L_Title = Label(self.topframe, text="Subscription-ID " + self.subID + " - filter:").grid(row=0, sticky=W)
+		self.L_Filter = Label(self.topframe, text=self.filter).grid(row=1, sticky=W)
+		
+		self.quitButton = tk.Button(self.topframe, text = 'Cancel', width = 10, command = self.close_window)
+		self.quitButton.grid(row=2)
+		
+		self.topframe.grid(row=0)
 				
+	def close_window(self):
+		self.master.destroy()				
 
 def main(): 
 	root = tk.Tk()
