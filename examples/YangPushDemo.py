@@ -71,10 +71,10 @@ class MainApplication:
 		
 		self.mainframe.grid()
 
-		self.B_NewSubscription = tk.Button(self.buttonframe, text="New Subscription", command=self.new_Subscription).grid(row=1, column=0)
-		self.B_ModifySubscription = tk.Button(self.buttonframe, text="Modify Subscription", command=self.modify_Subscription).grid(row=1, column=1)
-		self.B_DeleteSubscription = tk.Button(self.buttonframe, text="Delete Subscription", command=self.delete_Subscription).grid(row=1, column=2)
-		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get Subscription", command=self.get_Subscription).grid(row=1, column=3)		
+		self.B_NewSubscription = tk.Button(self.buttonframe, text="New subscription", command=self.new_Subscription).grid(row=1, column=0)
+		self.B_ModifySubscription = tk.Button(self.buttonframe, text="Modify subscription", command=self.modify_Subscription).grid(row=1, column=1)
+		self.B_DeleteSubscription = tk.Button(self.buttonframe, text="Delete subscription", command=self.delete_Subscription).grid(row=1, column=2)
+		self.B_GetSubscription = tk.Button(self.buttonframe, text="Get subscription", command=self.get_Subscription).grid(row=1, column=3)		
 		self.B_Exit = tk.Button(self.buttonframe, text="Exit", command=self.close_window).grid(row=1, column=4)
 
 		self.buttonframe.grid()
@@ -235,7 +235,7 @@ class MainApplication:
 			self.tree.insert(parent="", index="end", iid=subID, 
 				values=(server, 
 					subID,  
-					"waiting for first notification", 
+					"different session ID", 
 					stream, 
 					filter, 
 					startTime, 
@@ -562,8 +562,10 @@ class NewSubscriptionWindow:
 		for child in xmlroot:
 			if child.tag[-len("subscription-id"):] == "subscription-id":
 				self.subID = child.text
+			if child.tag[-len("subscription-result"):] == "subscription-result":
+				self.result = child.text
 		
-		if self.rpc_reply.ok:
+		if self.result == "ok":
 			self.controller.add_to_treeview(
 				subID=self.subID, 
 				server=self.host, 
@@ -579,6 +581,8 @@ class NewSubscriptionWindow:
 				priority=self.subPriority, 
 				dependency=self.subDependency)
 			self.close_window()
+		else:
+			print("subscription-result: " + self.result)
 
 	def updateTriggerChange(self, a, b, c):
 		if self.SB_UpdateTrigger.get() == "periodic":
@@ -834,7 +838,13 @@ class ModifySubscriptionWindow:
 			no_synch_on_start=self.noSynchOnStart, 
 			excluded_change=self.excludeStr)
 		
-		if self.rpc_reply.ok:
+		xmlroot = ET.fromstring(self.rpc_reply.xml)	
+		
+		for child in xmlroot:
+			if child.tag[-len("subscription-result"):] == "subscription-result":
+				self.result = child.text
+		
+		if self.result == "ok":
 			self.controller.add_to_treeview(
 				subID=self.subID, 
 				server=self.host, 
@@ -850,6 +860,8 @@ class ModifySubscriptionWindow:
 				priority=self.subPriority, 
 				dependency=self.subDependency)
 			self.close_window()
+		else:
+			print("subscription-result: " + self.result)
 
 	def updateTriggerChange(self, a, b, c):
 		if self.SB_UpdateTrigger.get() == "periodic":
@@ -918,10 +930,10 @@ class DeleteSubscriptionWindow:
 			print("Missing subscription-ID!")
 			return
 		else:
-			self.rpc_reply = self.session[0].delete_subscription(self.subID)
+			if self.controller.tree.set(self.subID, column="Status") != "complete":
+				self.rpc_reply = self.session[0].delete_subscription(self.subID)
 			self.controller.tree.delete(self.subID)
-	
-		self.close_window()
+			self.close_window()
 		
 	def close_window(self):
 		self.master.destroy()
