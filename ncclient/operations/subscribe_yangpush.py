@@ -255,6 +255,8 @@ class EstablishSubscription(RPC):
 
         if period is None:
             raise ValueError("Missing period")
+        elif int(period) <= 1 or int(period) >= 4294967295:
+            raise ValueError("Period is not in required range [0..4294967295]")
 
         if (no_synch_on_start or excluded_change is not None) and update_trigger != "on-change":
             raise ValueError("Can not set on change update parameters for periodic updates")
@@ -363,12 +365,17 @@ class ModifySubscription(RPC):
 
         if period is None:
             raise ValueError("Missing period")
+        elif int(period) <= 1 or int(period) >= 4294967295:
+            raise ValueError("Period is not in required range [0..4294967295]")
 
-        if (no_synch_on_start or excluded_change is not None) and update_trigger != "on-change":
+        if (no_synch_on_start is not None or excluded_change is not None) and update_trigger != "on-change":
             raise ValueError("Can not set on change update parameters for periodic updates")
 
-
         modify_node = etree.Element("modify-subscription", xmlns=EVENT_NOTIFICATION_NS)
+        
+        subIDTag = etree.Element("subscription-id", xmlns=EVENT_NOTIFICATION_NS)
+        subIDTag.text = subID
+        modify_node.append(subIDTag)  
 
         if encoding is not None:
             encodingTag = etree.Element("encoding", xmlns=EVENT_NOTIFICATION_NS)
@@ -414,7 +421,6 @@ class ModifySubscription(RPC):
             periodTag = etree.Element("dampening-period", xmlns=YANGPUSH_NOTIFICATION_NS)
             periodTag.text = period
             modify_node.append(periodTag)
-
             
             if no_synch_on_start is not None:
                 no_synch_on_startTag = etree.Element("no-synch-on-start", xmlns=YANGPUSH_NOTIFICATION_NS)
@@ -425,10 +431,6 @@ class ModifySubscription(RPC):
                 excluded_changeTag = etree.Element("excluded-change", xmlns=YANGPUSH_NOTIFICATION_NS)
                 excluded_changeTag.text = excluded_change
                 modify_node.append(excluded_changeTag)
-          
-        subIDTag = etree.Element("subscription-id", xmlns=EVENT_NOTIFICATION_NS)
-        subIDTag.text = subID
-        modify_node.append(subIDTag)  
 
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
@@ -481,6 +483,8 @@ class YangPushNotificationListener(SessionListener):
         *raw* will contain the xml notification as a string."""
         tag, attrs = root
         if tag != qualify("notification", NETCONF_NOTIFICATION_NS):
+            if tag == qualify("rpc-reply"):
+                return
             self.user_errback(NotificationError("Received a message not of type notification"))
             return
         notification = YangPushNotification(raw)

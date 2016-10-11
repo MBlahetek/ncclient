@@ -405,7 +405,7 @@ class NewSubscriptionWindow:
 		self.E_StopTime.grid(row=7, column=1, sticky=E)
 
 		self.L_UpdateFilter = Label(self.topframe, text="update-filter: ").grid(row=9, sticky=W)
-		self.updateFilters = ("None", "subtree")
+		self.updateFilters = ("subtree", "None")
 		self.SB_UpdateFilter = Spinbox(self.topframe, values=self.updateFilters, wrap=True, state='readonly', width=width-2)
 		self.SB_UpdateFilter.grid(row=9, column=1, sticky=E)
 		self.L_Criteria = Label(self.topframe, text="    criteria: ").grid(row=10, sticky=NW)
@@ -501,9 +501,11 @@ class NewSubscriptionWindow:
 		self.updateFilter = self.SB_UpdateFilter.get()
 		self.updateCriteria = self.T_Criteria.get('1.0', 'end')
 
-		if self.updateFilter != "None" and self.updateCriteria == "":
+		if self.updateFilter == "None" and self.updateCriteria != "\n":
 			self.updateCriteria = None
-		elif self.updateFilter != "None" and self.updateCriteria != None:
+			print("filter type not set")
+			return
+		elif self.updateFilter != "None" and self.updateCriteria != "\n":
 			if self.updateFilter == "subtree":
 				if self.updateCriteria[0] == "<":
 					self.filterTuple = (self.updateFilter, self.updateCriteria)
@@ -681,7 +683,7 @@ class ModifySubscriptionWindow:
 		self.E_StopTime.grid(row=8, column=1, sticky=E)
 
 		self.L_UpdateFilter = Label(self.topframe, text="update-filter: ").grid(row=10, sticky=W)
-		self.updateFilters = ("None", "subtree")
+		self.updateFilters = ("subtree", "None")
 		self.SB_UpdateFilter = Spinbox(self.topframe, values=self.updateFilters, wrap=True, state='readonly', width=width-2)
 		self.SB_UpdateFilter.grid(row=10, column=1, sticky=E)
 		self.L_Criteria = Label(self.topframe, text="    criteria: ").grid(row=11, sticky=NW)
@@ -753,7 +755,7 @@ class ModifySubscriptionWindow:
 		self.password = self.E_Password.get()
 		
 		self.subID = self.E_SubID.get()
-		if self.subID == None:
+		if self.subID == "":
 			print("missing subscription ID")
 			return
 		if self.SB_Encoding.get() == "XML":
@@ -781,9 +783,11 @@ class ModifySubscriptionWindow:
 		self.updateFilter = self.SB_UpdateFilter.get()
 		self.updateCriteria = self.T_Criteria.get('1.0', 'end')
 
-		if self.updateFilter != "None" and self.updateCriteria == "":
+		if self.updateFilter == "None" and self.updateCriteria != "\n":
 			self.updateCriteria = None
-		elif self.updateFilter != "None" and self.updateCriteria != None:
+			print("filter type not set")
+			return
+		elif self.updateFilter != "None" and self.updateCriteria != "\n":
 			if self.updateFilter == "subtree":
 				if self.updateCriteria[0] == "<":
 					self.filterTuple = (self.updateFilter, self.updateCriteria)
