@@ -67,7 +67,7 @@ class NotificationType(object):
 
 class YangPushNotification(object):
 
-    """Represents RFC5277 notifications """
+    """Represents yang push notifications """
 
     def __init__(self, raw):
         self._raw = raw
@@ -191,7 +191,8 @@ class EstablishSubscription(RPC):
         sub_start_time=None, sub_stop_time=None, priority=None, dependency=None, 
         update_trigger=None, period=None, no_synch_on_start=None, excluded_change=None):
 
-        """Establish a subscription to NETCONF server
+        """
+        Establish a subscription to NETCONF server.
 
         *callback* User-defined callback function to be invoked when a notification arrives
 
@@ -199,7 +200,7 @@ class EstablishSubscription(RPC):
         
         *notifListening* If there's already a active session with an existing
         YangPushNotificationListener, this boolean prevents having multiple listeners
-        for the same Task.
+        for the same task.
 
         *encoding* Distinguish between the proper encoding that was specified
         for the subscription (by default XML)
@@ -356,6 +357,11 @@ class ModifySubscription(RPC):
         encoding=None, stream=None, start_time=None, stop_time=None, update_filter=None, 
         sub_start_time=None, sub_stop_time=None, priority=None, dependency=None, 
         update_trigger=None, period=None, no_synch_on_start=None, excluded_change=None):
+        
+        """
+        Modify an existing subscription on a NETCONF server.
+        
+        """
 
         if callback is None:
             raise ValueError("Missing a callback function")
