@@ -514,7 +514,7 @@ class NewSubscriptionWindow:
 					return
 			else:
 				if self.updateCriteria[0] != "<":
-					self.filterTuple = (self.updateFilter, self.updateCriteria)
+					self.filterTuple = (self.updateFilter, self.updateCriteria.rstrip('\n'))
 				else:
 					print("Criteria not in a proper format!")
 					return
@@ -796,7 +796,7 @@ class ModifySubscriptionWindow:
 					return
 			else:
 				if self.updateCriteria[0] != "<":
-					self.filterTuple = (self.updateFilter, self.updateCriteria)
+					self.filterTuple = (self.updateFilter, self.updateCriteria.rstrip('\n'))
 				else:
 					print("Criteria not in a proper format!")
 					return
