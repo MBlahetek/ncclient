@@ -405,7 +405,7 @@ class NewSubscriptionWindow:
 		self.E_StopTime.grid(row=7, column=1, sticky=E)
 
 		self.L_UpdateFilter = Label(self.topframe, text="update-filter: ").grid(row=9, sticky=W)
-		self.updateFilters = ("subtree", "None")
+		self.updateFilters = ("subtree", "xpath", "None")
 		self.SB_UpdateFilter = Spinbox(self.topframe, values=self.updateFilters, wrap=True, state='readonly', width=width-2)
 		self.SB_UpdateFilter.grid(row=9, column=1, sticky=E)
 		self.L_Criteria = Label(self.topframe, text="    criteria: ").grid(row=10, sticky=NW)
