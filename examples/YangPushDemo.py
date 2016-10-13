@@ -16,7 +16,7 @@ class MainApplication:
 		self.master = master
 		self.sessions = []
 		self.filters = []
-
+		
 		self.calc_window_size(self.master)
 
 		self.mainframe = tk.Frame(self.master)
@@ -61,6 +61,7 @@ class MainApplication:
 
 		self.tree.grid()
 		
+		#basis for the subscription filter message box
 		self.tree.bind("<Double-1>", self.OnDoubleClick)
 		
 		self.tree.tag_configure("waiting", background="Khaki")
@@ -84,17 +85,32 @@ class MainApplication:
 		self.buttonframe.grid()
 
 	def callback(self, notification):
+		
+		"""
+		This callback receives all the notifications. At the moment it just prints them
+		and calls a update method to display the status of a subscription.
+		"""
+		
 		print("callback called")
 		print(notification)
 
 		self.update_Subscription(notification)
 				
 	def errback(self, ex):
+		
+		"""
+		This errback handles incoming messages not of type notification.
+		"""
+		
 		print("errback called.")
 		print(ex)
 
 	def add_to_treeview(self, subID, server, stream, encoding, updateTrigger, period, filter=None, 
 					startTime=None, stopTime=None, subStartTime=None, subStopTime=None, priority=None, dependency=None):
+		
+		"""
+		Takes the arguments from the establish and modify subscription classes to display them in the treeview widget.
+		"""
 
 		if self.tree.exists(subID):			
 			self.tree.set(subID, column="Stream", value=stream)
@@ -176,18 +192,28 @@ class MainApplication:
 			self.filters.append((subID, filter))
 			self.tree.item(subID, tags=("waiting"))		
 			
-	def add_subscriptions(self, singlenode, rpc_reply, server, session):
+	def add_subscriptions(self, singlenode, rpc_reply, server):
+		
+		"""
+		takes the arguments from the get subscription rpc and invokes the
+		parse_to_treeview method for parsing the received xml string.
+		"""
 		
 		root = ET.fromstring(rpc_reply.xml)
 		if singlenode:
 			subxml = root[0][0][0]
-			self.parse_to_treeview(subxml, server, session)
+			self.parse_to_treeview(subxml, server)
 		else:
 			subxml = root[0][0]
 			for child in subxml:
-				self.parse_to_treeview(child, server, session)
+				self.parse_to_treeview(child, server)
 
-	def parse_to_treeview(self, xml, server, session):	
+	def parse_to_treeview(self, xml, server):
+		
+		"""
+		processes the xml string from the get subcription rpc for displaying in the GUI
+		"""
+		
 		existing = False
 		filter = ""
 		for child in xml:
@@ -248,7 +274,7 @@ class MainApplication:
 			self.tree.insert(parent="", index="end", iid=subID, 
 				values=(server, 
 					subID,  
-					"waiting", 
+					"different session", 
 					stream, 
 					filter, 
 					startTime, 
@@ -265,6 +291,11 @@ class MainApplication:
 		
 
 	def update_Subscription(self, notification):
+		
+		"""
+		changes the subscription status depending on the incoming notification
+		"""
+		
 		subID = ET.fromstring(notification.data_xml)[0].text
 		type = notification.type
 		status = ""
@@ -292,6 +323,10 @@ class MainApplication:
 			return
 
 	def get_Session(self, server, user, password):
+		
+		"""
+		takes care that there's only one session per server
+		"""
 		
 		sessionUp = False
 				
@@ -960,11 +995,13 @@ class DeleteSubscriptionWindow:
 		self.subID = self.E_SubID.get()
 	
 		self.session = self.controller.get_Session(self.host, self.user, self.password)
-			
+		
 		if self.subID == "":
 			print("Missing subscription-ID!")
 			return
 		else:
+			# if subscription is complete the subscription is already removed from the server.
+			# a delete subscription RPC would cause an error in that case.
 			if self.controller.tree.set(self.subID, column="Status") != "complete":
 				self.rpc_reply = self.session[0].delete_subscription(self.subID)
 			self.controller.tree.delete(self.subID)
@@ -1040,7 +1077,7 @@ class GetSubscriptionWindow:
 				filter=("subtree", FILTERXMLID))
 			singlenode = True	
 		
-		self.controller.add_subscriptions(singlenode, self.rpc_reply, self.host, self.session[0])
+		self.controller.add_subscriptions(singlenode, self.rpc_reply, self.host)
 
 		self.close_window()
 

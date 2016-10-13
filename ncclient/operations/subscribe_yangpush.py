@@ -262,7 +262,7 @@ class EstablishSubscription(RPC):
         if (no_synch_on_start or excluded_change is not None) and update_trigger != "on-change":
             raise ValueError("Can not set on change update parameters for periodic updates")
 
-
+        
         subscription_node = etree.Element("establish-subscription", xmlns=EVENT_NOTIFICATION_NS)
 
         if encoding is not None:
@@ -304,13 +304,11 @@ class EstablishSubscription(RPC):
             periodTag = etree.Element("period", xmlns=YANGPUSH_NOTIFICATION_NS)
             periodTag.text = period
             subscription_node.append(periodTag)
-
-        if update_trigger == "on-change":
+        elif update_trigger == "on-change":
             periodTag = etree.Element("dampening-period", xmlns=YANGPUSH_NOTIFICATION_NS)
             periodTag.text = period
             subscription_node.append(periodTag)
-
-            
+       
             if no_synch_on_start is not None:
                 no_synch_on_startTag = etree.Element("no-synch-on-start", xmlns=YANGPUSH_NOTIFICATION_NS)
                 # a flag element, no text needed.
@@ -323,13 +321,17 @@ class EstablishSubscription(RPC):
             
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
-        
+
         # send the RPC
         return self._request(subscription_node)
     
 class ModifySubscription(RPC):
 
     def datetime_to_rfc(self, time_string, time, namespace):
+        
+        """
+        Converts the input time format to the valid format
+        """
 
         if type(time) is not datetime:
             raise TypeError("%s is not a valid %s" % (str(time), time_string))
@@ -343,6 +345,11 @@ class ModifySubscription(RPC):
         return timeTag
     
     def build_filter(self, updatefilter):
+        
+        """
+        Converts filter type and path in the correct format
+        """
+        
         type = updatefilter[0]
         path = updatefilter[1]
         if type == "subtree":
@@ -361,6 +368,8 @@ class ModifySubscription(RPC):
         """
         Modify an existing subscription on a NETCONF server.
         
+        Takes an additional **subID** argument to signal the NETCONF server which 
+        subscription has to be modified.
         """
 
         if callback is None:
@@ -422,8 +431,7 @@ class ModifySubscription(RPC):
             periodTag = etree.Element("period", xmlns=YANGPUSH_NOTIFICATION_NS)
             periodTag.text = period
             modify_node.append(periodTag)
-
-        if update_trigger == "on-change":
+        elif update_trigger == "on-change":
             periodTag = etree.Element("dampening-period", xmlns=YANGPUSH_NOTIFICATION_NS)
             periodTag.text = period
             modify_node.append(periodTag)
@@ -437,7 +445,8 @@ class ModifySubscription(RPC):
                 excluded_changeTag = etree.Element("excluded-change", xmlns=YANGPUSH_NOTIFICATION_NS)
                 excluded_changeTag.text = excluded_change
                 modify_node.append(excluded_changeTag)
-
+        
+        #checks if there is already a notification listener
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
         
@@ -472,7 +481,7 @@ class GetSubscription(RPC):
 class YangPushNotificationListener(SessionListener):
 
     """Class extending :class:`Session` listeners,
-    which are notified when a new RFC 5277 notification
+    which are notified when a new yang push notification
     is received or an error occurs."""
 
     def __init__(self, user_callback, user_errback):
