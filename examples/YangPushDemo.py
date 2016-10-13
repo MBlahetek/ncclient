@@ -216,6 +216,8 @@ class MainApplication:
 		
 		existing = False
 		filter = ""
+		priority = ""
+		dependency = ""
 		for child in xml:
 			if child.tag[-len("subscription-id"):] == "subscription-id":
 				subID = child.text
