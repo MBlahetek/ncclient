@@ -234,7 +234,7 @@ class MainApplication:
 			if child.tag[-len("stream"):] == "stream":
 				stream = child.text
 			if child.tag[-len("filter-1"):] == "filter-1":
-				stream = child.text	
+				filter = child.text	
 			if child.tag[-len("startTime"):] == "startTime":
 				startTime = child.text
 			if child.tag[-len("stopTime"):] == "stopTime":
