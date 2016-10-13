@@ -321,9 +321,14 @@ class EstablishSubscription(RPC):
             
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
-
+        
+        print("\n")
+        print("establish subscription rpc:")
+        print(to_xml(subscription_node, pretty_print=True))
         # send the RPC
-        return self._request(subscription_node)
+        reply = self._request(subscription_node)
+        print(reply)             
+        return reply
     
 class ModifySubscription(RPC):
 
@@ -450,8 +455,15 @@ class ModifySubscription(RPC):
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
         
+        print("\n")
+        print("modify subscription rpc:")
+        print(to_xml(modify_node, pretty_print=True))
+        
+        reply = self._request(modify_node)
+
+        print(reply)      
         # send the RPC
-        return self._request(modify_node)    
+        return reply    
 
 class DeleteSubscription(RPC):
     
@@ -463,7 +475,14 @@ class DeleteSubscription(RPC):
         idTag.text = subscriptionID
         delete_subscription_node.append(idTag)
         
-        return self._request(delete_subscription_node)
+        print("\n")
+        print("delete subscription rpc:")
+        print(to_xml(delete_subscription_node, pretty_print=True))
+        
+        reply = self._request(delete_subscription_node)
+
+        print(reply)    
+        return reply
 
 class GetSubscription(RPC):
 
@@ -474,9 +493,15 @@ class GetSubscription(RPC):
             node.append(util.build_filter(filter))
         if notifListening is False:
             self.session.add_listener(YangPushNotificationListener(callback, errback))
-        return self._request(node)
+        
+        print("\n")
+        print("get subscription rpc:")
+        print(to_xml(node, pretty_print=True))    
+        
+        reply = self._request(node)
 
-    
+        print(reply)      
+        return reply
 
 class YangPushNotificationListener(SessionListener):
 
