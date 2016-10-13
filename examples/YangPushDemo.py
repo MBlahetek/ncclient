@@ -90,7 +90,7 @@ class MainApplication:
 		This callback receives all the notifications. At the moment it just prints them
 		and calls a update method to display the status of a subscription.
 		"""
-		
+		print("\n")
 		print("callback called")
 		print(notification)
 
@@ -101,7 +101,7 @@ class MainApplication:
 		"""
 		This errback handles incoming messages not of type notification.
 		"""
-		
+		print("\n")
 		print("errback called.")
 		print(ex)
 
