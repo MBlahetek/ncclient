@@ -538,25 +538,28 @@ class NewSubscriptionWindow:
 			self.stopTime = None
 
 		self.updateFilter = self.SB_UpdateFilter.get()
-		self.updateCriteria = self.T_Criteria.get('1.0', 'end')
+		self.updateCriteria = self.T_Criteria.get('1.0', 'end').rstrip('\n')
 
-		if self.updateFilter == "None" and self.updateCriteria != "\n":
+		if self.updateFilter == "None" and self.updateCriteria != "":
 			self.updateCriteria = None
-			print("filter type not set")
+			print("filter type not set. Remove criteria or change filter type.")
 			return
-		elif self.updateFilter != "None" and self.updateCriteria != "\n":
+		elif self.updateFilter != "None" and self.updateCriteria != "":
 			if self.updateFilter == "subtree":
-				if self.updateCriteria[0] == "<":
+				try:
+					x = ET.fromstring(self.updateCriteria)					
 					self.filterTuple = (self.updateFilter, self.updateCriteria)
-				else:
+				except:
 					print("Criteria not in a proper format!")
 					return
 			else:
-				if self.updateCriteria[0] != "<":
-					self.filterTuple = (self.updateFilter, self.updateCriteria.rstrip('\n'))
-				else:
+				try:
+					x = ET.fromstring(self.updateCriteria)	
 					print("Criteria not in a proper format!")
 					return
+				except:
+					self.filterTuple = (self.updateFilter, self.updateCriteria)
+
 		else:
 			self.filterTuple = None
 
@@ -822,23 +825,28 @@ class ModifySubscriptionWindow:
 		self.updateFilter = self.SB_UpdateFilter.get()
 		self.updateCriteria = self.T_Criteria.get('1.0', 'end')
 
-		if self.updateFilter == "None" and self.updateCriteria != "\n":
+		self.updateFilter = self.SB_UpdateFilter.get()
+		self.updateCriteria = self.T_Criteria.get('1.0', 'end').rstrip('\n')
+
+		if self.updateFilter == "None" and self.updateCriteria != "":
 			self.updateCriteria = None
-			print("filter type not set")
+			print("filter type not set. Remove criteria or change filter type.")
 			return
-		elif self.updateFilter != "None" and self.updateCriteria != "\n":
+		elif self.updateFilter != "None" and self.updateCriteria != "":
 			if self.updateFilter == "subtree":
-				if self.updateCriteria[0] == "<":
+				try:
+					x = ET.fromstring(self.updateCriteria)					
 					self.filterTuple = (self.updateFilter, self.updateCriteria)
-				else:
+				except:
 					print("Criteria not in a proper format!")
 					return
 			else:
-				if self.updateCriteria[0] != "<":
-					self.filterTuple = (self.updateFilter, self.updateCriteria.rstrip('\n'))
-				else:
+				try:
+					x = ET.fromstring(self.updateCriteria)	
 					print("Criteria not in a proper format!")
 					return
+				except:
+					self.filterTuple = (self.updateFilter, self.updateCriteria)
 		else:
 			self.filterTuple = None
 
